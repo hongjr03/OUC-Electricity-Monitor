@@ -51,6 +51,8 @@ device_token = "your_device_token"
 
 `chazuo_threshold` 和 `kongtiao_threshold` 为电量余量阈值，当电量余量低于阈值时会发送通知。对于 iOS 用户，如果需要推送通知，请填写 `bark` 配置项，`device_token` 为 Bark 的设备码。关于 Bark 的更多信息请参考 [Bark 官网](https://bark.day.app/) 或 [Bark GitHub](https://github.com/Finb/Bark)。
 
+![Bark 通知](assets/bark.png)
+
 配置完成后，初始化数据库：
 
 ```bash
