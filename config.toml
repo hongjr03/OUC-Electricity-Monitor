@@ -2,8 +2,8 @@
 type = "SQLite" # 数据库类型，支持 SQLite 和 MySQL
 
 [notify]
-chazuo_threshold = 100
-kongtiao_threshold = 100
+chazuo_threshold = 10
+kongtiao_threshold = 10
 
 [student]
 id = "your_student_id"

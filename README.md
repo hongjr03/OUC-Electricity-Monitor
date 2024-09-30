@@ -24,8 +24,8 @@ pip install -r requirements.txt
 type = "SQLite" # 数据库类型，支持 SQLite 和 MySQL
 
 [notify]
-chazuo_threshold = 100
-kongtiao_threshold = 100
+chazuo_threshold = 10
+kongtiao_threshold = 10
 
 [student]
 id = "your_student_id"
@@ -49,7 +49,7 @@ device_token = "your_device_token"
 
 其中，electricity_fee 为电费单价，单位为元/度。0.54 为财务处公布的电费单价。
 
-对于 iOS 用户，如果需要推送通知，请填写 `bark` 配置项，`device_token` 为 Bark 的设备码。关于 Bark 的更多信息请参考 [Bark 官网](https://bark.day.app/) 或 [Bark GitHub](https://github.com/Finb/Bark)。
+`chazuo_threshold` 和 `kongtiao_threshold` 为电量余量阈值，当电量余量低于阈值时会发送通知。对于 iOS 用户，如果需要推送通知，请填写 `bark` 配置项，`device_token` 为 Bark 的设备码。关于 Bark 的更多信息请参考 [Bark 官网](https://bark.day.app/) 或 [Bark GitHub](https://github.com/Finb/Bark)。
 
 配置完成后，初始化数据库：
 
