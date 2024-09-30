@@ -38,9 +38,6 @@ class KongTiao(Model):
 
 
 if __name__ == "__main__":
-    # db.connect()
-    # db.create_tables([ChaZuo, KongTiao])
-
     id = config["student"]["id"]
 
     headers = {
@@ -69,14 +66,6 @@ if __name__ == "__main__":
         eqptNum = len(eqptData)
 
         if eqptNum > 2:
-            # 查看是否 categoryEnergyName 有多个空调末端
-            # category = [
-            #     {
-            #         "categoryEnergyName": eqptData[i]["categoryEnergyName"],
-            #         "roomName": eqptData[i]["roomName"],
-            #         "index": i,
-            #     } for i in range(eqptNum)
-            # ]
             category = []
 
             for i in range(eqptNum):
@@ -88,10 +77,7 @@ if __name__ == "__main__":
                             "index": i,
                         }
                     )
-
-            # 询问保留哪一个
-            # 允许用户上下移动键盘选择
-
+                    
             import keyboard
             import time
 
@@ -136,7 +122,4 @@ if __name__ == "__main__":
             )
 
         with open("config.toml", "w", encoding="utf-8") as f:
-            # 如果没有 student.electricity_fee = 0.54，添加这一行
-            if "electricity_fee" not in config["student"]:
-                config["student"]["electricity_fee"] = 0.54
             dump(config, f)
