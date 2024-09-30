@@ -49,7 +49,7 @@ def get_latest_data(model):
     if "charge" in df.columns:
         df["charge"] = df["charge"].astype(float)
 
-    return df["charge"].values[0]
+    return df["charge"].values[0] if not df.empty else 0.0
 
 
 # 获取距离现在最近的插座和空调数据

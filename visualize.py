@@ -57,19 +57,22 @@ def get_consumption_rate(data):
             consumption_time += (
                 data["time"].iloc[i] - data["time"].iloc[i - 1]
             ).total_seconds()
-    consumption_rate = consumption / consumption_time * 3600
+    if consumption_time > 0:
+        consumption_rate = consumption / consumption_time * 3600
+    else:
+        consumption_rate = 0
     return consumption_rate
 
 
 # 展示插座剩余电量
 st.header("插座剩余电量")
-st.write(config["student"]["equipments"]["chazuo"]["roomName"])
 if not chazuo_data.empty:
     col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
     with col1:
         fig_chazuo = px.line(chazuo_data, x="time", y="charge")
         st.plotly_chart(fig_chazuo, use_container_width=True)
     with col2:
+        st.write(config["student"]["equipments"]["chazuo"]["roomName"])
         current_chazuo = chazuo_data["charge"].iloc[-1]
         st.metric("当前插座剩余电量", f"{current_chazuo:.2f}")
         if len(chazuo_data) > 1:
@@ -90,6 +93,7 @@ if not kongtiao_data.empty:
         fig_kongtiao = px.line(kongtiao_data, x="time", y="charge")
         st.plotly_chart(fig_kongtiao, use_container_width=True)
     with col2:
+        st.write(config["student"]["equipments"]["kongtiao"]["roomName"])
         current_kongtiao = kongtiao_data["charge"].iloc[-1]
         st.metric("当前空调剩余电量", f"{current_kongtiao:.2f}")
         if len(kongtiao_data) > 1:
