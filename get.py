@@ -97,8 +97,8 @@ if config["notify"]["bark"]["enabled"]:
         )
 
     if chazuo_info - latest_chazuo_data > 0:
-        bark.send(title="插座", content=f"充入 {chazuo_info - latest_chazuo_data} 度。")
+        bark.send(title="插座", content=f"充入 {chazuo_info - latest_chazuo_data:.2f} 度。")
     if kongtiao_info - latest_kongtiao_data > 0:
         bark.send(
-            title="空调", content=f"充入 {kongtiao_info - latest_kongtiao_data} 度。"
+            title="空调", content=f"充入 {kongtiao_info - latest_kongtiao_data:.2f} 度。"
         )
