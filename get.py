@@ -89,16 +89,19 @@ if config["notify"]["bark"]["enabled"]:
     bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
     if chazuo_info < chazuo_threshold:
         bark.send(
-            title="插座电量不足", content=f"剩余 {chazuo_info} 度，请及时充电费！"
+            title="插座电量不足", content=f"剩余 {chazuo_info:.2f} 度，请及时充电费！"
         )
     if kongtiao_info < kongtiao_threshold:
         bark.send(
-            title="空调电量不足", content=f"剩余 {kongtiao_info} 度，请及时充电费！"
+            title="空调电量不足", content=f"剩余 {kongtiao_info:.2f} 度，请及时充电费！"
         )
 
     if chazuo_info - latest_chazuo_data > 0:
-        bark.send(title="插座", content=f"充入 {chazuo_info - latest_chazuo_data:.2f} 度。")
+        bark.send(
+            title="插座", content=f"充入 {chazuo_info - latest_chazuo_data:.2f} 度。"
+        )
     if kongtiao_info - latest_kongtiao_data > 0:
         bark.send(
-            title="空调", content=f"充入 {kongtiao_info - latest_kongtiao_data:.2f} 度。"
+            title="空调",
+            content=f"充入 {kongtiao_info - latest_kongtiao_data:.2f} 度。",
         )
