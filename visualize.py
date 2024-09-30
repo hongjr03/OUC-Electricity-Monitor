@@ -64,50 +64,33 @@ def get_consumption_rate(data):
     return consumption_rate
 
 
-# 展示插座剩余电量
-st.header("插座剩余电量")
-if not chazuo_data.empty:
-    col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
-    with col1:
-        fig_chazuo = px.line(chazuo_data, x="time", y="charge")
-        st.plotly_chart(fig_chazuo, use_container_width=True)
-    with col2:
-        st.write(config["student"]["equipments"]["chazuo"]["roomName"])
-        current_chazuo = chazuo_data["charge"].iloc[-1]
-        st.metric("当前插座剩余电量", f"{current_chazuo:.2f}")
-        if len(chazuo_data) > 1:
-            chazuo_consumption_rate = get_consumption_rate(chazuo_data)
-            st.metric("插座每小时平均消耗", f"{chazuo_consumption_rate:.2f}")
-            st.metric(
-                "相当于每天交",
-                f"¥{chazuo_consumption_rate * 24 * electricity_fee:.2f}",
-            )
-else:
-    st.write("暂无插座电量数据")
+def get_consumption(data, header):
+    st.header(header)
+    if not data.empty:
+        col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
+        with col1:
+            fig = px.line(data, x="time", y="charge")
+            st.plotly_chart(fig, use_container_width=True)
+        with col2:
+            # st.write(config["student"]["equipments"]["chazuo"]["roomName"])
+            current = data["charge"].iloc[-1]
+            st.metric("当前剩余电量", f"{current:.2f}")
+            if len(data) > 1:
+                consumption_rate = get_consumption_rate(data)
+                st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
+                st.metric(
+                    "相当于每天交",
+                    f"¥{consumption_rate * 24 * electricity_fee:.2f}",
+                )
+    else:
+        st.write("暂无电量数据")
 
-# 展示空调剩余电量
-st.header("空调剩余电量")
-if not kongtiao_data.empty:
-    col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
-    with col1:
-        fig_kongtiao = px.line(kongtiao_data, x="time", y="charge")
-        st.plotly_chart(fig_kongtiao, use_container_width=True)
-    with col2:
-        st.write(config["student"]["equipments"]["kongtiao"]["roomName"])
-        current_kongtiao = kongtiao_data["charge"].iloc[-1]
-        st.metric("当前空调剩余电量", f"{current_kongtiao:.2f}")
-        if len(kongtiao_data) > 1:
-            kongtiao_consumption_rate = get_consumption_rate(kongtiao_data)
-            st.metric("空调每小时平均消耗", f"{kongtiao_consumption_rate:.2f}")
-            # 换算成每天交的电费
-            st.metric(
-                "相当于每天交",
-                f"¥{kongtiao_consumption_rate * 24 * electricity_fee:.2f}",
-            )
 
-else:
-    st.write("暂无空调电量数据")
+get_consumption(chazuo_data, "插座")
+get_consumption(kongtiao_data, "空调")
 
+current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
+current_kongtiao = kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
 # 总剩余电量
 st.header("总剩余电量")
 if not chazuo_data.empty and not kongtiao_data.empty:
