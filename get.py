@@ -1,9 +1,10 @@
 import requests
 from peewee import *
 import datetime
-import time
 from init import ChaZuo, KongTiao
 from toml import load
+from BarkNotificator import BarkNotificator
+import pandas as pd
 
 
 def get_df(equipmentInfoId):
@@ -37,13 +38,6 @@ def get_df(equipmentInfoId):
 
 
 config = load("config.toml")
-
-
-from BarkNotificator import BarkNotificator
-
-bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
-
-import pandas as pd
 
 
 def get_latest_data(model):
@@ -87,10 +81,12 @@ except Exception as e:
 chazuo_info, kongtiao_info = chazuo_response["total"], kongtiao_response["total"]
 chazuo_info, kongtiao_info = float(chazuo_info), float(kongtiao_info)
 
+
 if config["notify"]["bark"]["enabled"]:
     chazuo_threshold = config["notify"]["chazuo_threshold"]
     kongtiao_threshold = config["notify"]["kongtiao_threshold"]
 
+    bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
     if chazuo_info < chazuo_threshold:
         bark.send(
             title="插座电量不足", content=f"剩余 {chazuo_info} 度，请及时充电费！"

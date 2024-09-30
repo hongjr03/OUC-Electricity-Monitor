@@ -40,6 +40,23 @@ def get_data(model, time_range):
 chazuo_data = get_data(ChaZuo, time_range)
 kongtiao_data = get_data(KongTiao, time_range)
 
+
+def get_consumption_rate(data):
+    consumption_rate = 0
+    consumption = 0
+    consumption_time = 0
+    for i in range(1, len(data)):
+        if data["charge"].iloc[i] < data["charge"].iloc[i - 1]:
+            consumption += float(data["charge"].iloc[i - 1]) - float(
+                data["charge"].iloc[i]
+            )
+            consumption_time += (
+                data["time"].iloc[i] - data["time"].iloc[i - 1]
+            ).total_seconds()
+    consumption_rate = consumption / consumption_time * 3600
+    return consumption_rate
+
+
 # 展示插座剩余电量
 st.header("插座剩余电量")
 if not chazuo_data.empty:
@@ -51,20 +68,7 @@ if not chazuo_data.empty:
         current_chazuo = chazuo_data["charge"].iloc[-1]
         st.metric("当前插座剩余电量", f"{current_chazuo:.2f}")
         if len(chazuo_data) > 1:
-            chazuo_consumption_rate = 0
-            chazuo_consumption = 0
-            chazuo_consumption_time = 0
-            for i in range(1, len(chazuo_data)):
-                if chazuo_data["charge"].iloc[i] < chazuo_data["charge"].iloc[i - 1]:
-                    chazuo_consumption += float(
-                        chazuo_data["charge"].iloc[i - 1]
-                    ) - float(chazuo_data["charge"].iloc[i])
-                    chazuo_consumption_time += (
-                        chazuo_data["time"].iloc[i] - chazuo_data["time"].iloc[i - 1]
-                    ).total_seconds()
-            chazuo_consumption_rate = (
-                chazuo_consumption / chazuo_consumption_time * 3600
-            )
+            chazuo_consumption_rate = get_consumption_rate(chazuo_data)
             st.metric("插座每小时平均消耗", f"{chazuo_consumption_rate:.2f}")
             st.metric(
                 "相当于每天交",
@@ -84,24 +88,7 @@ if not kongtiao_data.empty:
         current_kongtiao = kongtiao_data["charge"].iloc[-1]
         st.metric("当前空调剩余电量", f"{current_kongtiao:.2f}")
         if len(kongtiao_data) > 1:
-            kongtiao_consumption_rate = 0
-            kongtiao_consumption = 0
-            kongtiao_consumption_time = 0
-            for i in range(1, len(kongtiao_data)):
-                if (
-                    kongtiao_data["charge"].iloc[i]
-                    < kongtiao_data["charge"].iloc[i - 1]
-                ):
-                    kongtiao_consumption += float(
-                        kongtiao_data["charge"].iloc[i - 1]
-                    ) - float(kongtiao_data["charge"].iloc[i])
-                    kongtiao_consumption_time += (
-                        kongtiao_data["time"].iloc[i]
-                        - kongtiao_data["time"].iloc[i - 1]
-                    ).total_seconds()
-            kongtiao_consumption_rate = (
-                kongtiao_consumption / kongtiao_consumption_time * 3600
-            )
+            kongtiao_consumption_rate = get_consumption_rate(kongtiao_data)
             st.metric("空调每小时平均消耗", f"{kongtiao_consumption_rate:.2f}")
             # 换算成每天交的电费
             st.metric(
