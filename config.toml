@@ -9,6 +9,9 @@ kongtiao_threshold = 10
 id = "your_student_id"
 electricity_fee = 0.54
 
+[visualize]
+title = "Electricity!"
+
 [database.MySQL]
 host = "localhost"
 port = 3306

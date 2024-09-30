@@ -77,7 +77,7 @@ if __name__ == "__main__":
                             "index": i,
                         }
                     )
-                    
+
             import keyboard
             import time
 
@@ -120,6 +120,12 @@ if __name__ == "__main__":
             config["student"]["equipments"][categoryEnergyName]["equipmentInfoId"] = (
                 eqptData[i]["equipmentInfoId"]
             )
+            config["student"]["equipments"][categoryEnergyName]["roomName"] = (
+                eqptData[i]["roomName"]
+            )
 
         with open("config.toml", "w", encoding="utf-8") as f:
+            if "visualize" not in config or "title" not in config["visualize"]:
+                config["visualize"] = {}
+                config["visualize"]["title"] = "Electricity!"
             dump(config, f)

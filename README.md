@@ -31,6 +31,9 @@ kongtiao_threshold = 10
 id = "your_student_id"
 electricity_fee = 0.54
 
+[visualize]
+title = "Electricity!"
+
 [database.MySQL]
 host = "localhost"
 port = 3306
@@ -72,3 +75,9 @@ python init.py
 ```bash
 streamlit run visualize.py
 ```
+
+## 注意
+
+- 请勿将配置文件上传至公开仓库，其中包含了个人信息。
+- 请勿频繁请求电费数据，以免对校园网造成影响。
+- 对于电量的平均消耗计算依赖于定时任务的执行频率，如果定时任务执行频率不稳定，可能会导致电量的平均消耗不准确。计算时，只针对电量减少的情况进行计算，不考虑电量增加或不变的情况。因此每日电费估计**一定**是一个**偏大**的值，仅供参考。

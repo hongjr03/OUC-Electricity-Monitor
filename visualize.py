@@ -4,10 +4,14 @@ import plotly.express as px
 from peewee import *
 from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, electricity_fee
+from toml import load
 
-
+config = load("config.toml")
+if "visualize" not in config or "title" not in config["visualize"]:
+    st.error("请先运行 init.py 文件")
+    st.stop()
 # Streamlit 应用
-st.title("Electricity!")
+st.title(config["visualize"]["title"])
 
 # 时间范围选择
 time_range = st.selectbox(
@@ -59,6 +63,7 @@ def get_consumption_rate(data):
 
 # 展示插座剩余电量
 st.header("插座剩余电量")
+st.write(config["student"]["equipments"]["chazuo"]["roomName"])
 if not chazuo_data.empty:
     col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
     with col1:
