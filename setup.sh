@@ -32,6 +32,10 @@ echo ""
 # Initialize the database
 echo "Initializing the database..."
 python init.py
+if [ $? -ne 0 ]; then
+    echo "Database initialization failed. Please recheck the configuration. Exiting..."
+    exit 1
+fi
 echo "Database has been initialized."
 echo ""
 echo ""
@@ -52,9 +56,7 @@ echo ""
 echo "Setting up crontab..."
 CRONTAB=$(python -c "from init import get_crontab; print(get_crontab())")
 CRONTAB_COMMAND="cd $(pwd) && .venv/bin/python get.py"
-
 echo "${CRONTAB} ${CRONTAB_COMMAND}"
-
 # 将 crontab 时间表写入文件
 (crontab -l 2>/dev/null; echo "${CRONTAB} ${CRONTAB_COMMAND}") | crontab -
 echo "Crontab has been set up."

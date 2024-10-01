@@ -90,7 +90,13 @@ if __name__ == "__main__":
         value = response_data["value"]
 
         # print("Value:", value)
-        value_dict = eval(value)
+        try:
+            value_dict = eval(value)
+        # NameError
+        except NameError as e:
+            print(e)
+            print("获取数据失败，请检查 config 配置并重新初始化。")
+            exit(1)
         eqptData = value_dict["eqptData"]
         eqptNum = len(eqptData)
 
