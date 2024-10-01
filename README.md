@@ -8,6 +8,64 @@
 
 ## 使用
 
+### 编辑配置文件
+
+请保证已连接到校园网，然后编辑 `config.toml` 文件，填入**学号**和数据库信息。
+
+> [!NOTE]
+> 如果对数据库使用不熟悉，建议除了在 student.id 处填写学号外，维持配置原样，程序会自动创建数据库文件。
+
+```toml
+[database]
+type = "SQLite" # 数据库类型，支持 SQLite 和 MySQL
+
+[notify]
+chazuo_threshold = 10   # 插座电量阈值，单位为度
+kongtiao_threshold = 10 # 空调电量阈值，单位为度
+
+[student]
+id = "your_student_id" # 学号，请务必填写
+electricity_fee = 0.54 # 电费单价，单位为 RMB/度
+
+[cron]
+interval = 5            # 定时任务执行间隔，单位为分钟，例如 5 表示每 5 分钟执行一次
+crontab = "*/5 * * * *" # 定时任务执行时间，例如 "*/5 * * * *" 表示每 5 分钟执行一次
+
+
+[visualize]
+title = "Electricity!" # 可视化标题
+
+[database.MySQL] # MySQL 数据库配置
+host = "localhost"
+port = 3306
+user = "your_username"
+password = "your_password"
+database_name = "your_database_name"
+
+[database.SQLite] # SQLite 数据库配置，初始化后会替换成绝对路径
+file_path = "Electricity.db"
+
+[notify.bark] # Bark 配置，用于推送电量告警和充电提醒
+# https://bark.day.app/
+enabled = false
+device_token = "your_device_token"
+```
+
+对于 iOS 用户，如果需要推送通知，请填写 `bark` 配置项，`device_token` 为 Bark 的设备码。关于 Bark 的更多信息请参考 [Bark 官网](https://bark.day.app/) 或 [Bark GitHub](https://github.com/Finb/Bark)。
+
+![Bark 通知](assets/bark.png)
+
+### 对 Ubuntu 用户
+
+项目提供了一个 setup.sh 脚本，可以自动安装依赖并配置定时任务、部署服务。请确保已经编辑好了配置文件，然后运行以下命令：
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+### 手动配置
+
 首先，请确保您的 Python 版本为 3.8 及以上。创建虚拟环境：
 
 ```bash
@@ -32,52 +90,6 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-
-请保证已连接到校园网，然后编辑 `config.toml` 文件，填入学号和数据库信息。
-
-> [!NOTE]
-> 如果对数据库使用不熟悉，建议使用 SQLite 并填写 `file_path`（如 `Electricity.db`），程序会自动创建数据库文件。
-
-```toml
-[database]
-type = "SQLite" # 数据库类型，支持 SQLite 和 MySQL
-
-[notify]
-chazuo_threshold = 10
-kongtiao_threshold = 10
-
-[student]
-id = "your_student_id"
-electricity_fee = 0.54
-
-[cron]
-interval = 5 # 定时任务执行间隔，单位为分钟，例如 5 表示每 5 分钟执行一次
-crontab = "*/5 * * * *" # 定时任务执行时间，例如 "*/5 * * * *" 表示每 5 分钟执行一次
-
-[visualize]
-title = "Electricity!"
-
-[database.MySQL]
-host = "localhost"
-port = 3306
-user = "your_username"
-password = "your_password"
-database_name = "your_database_name"
-
-[database.SQLite]
-file_path = "your_database_file_path"
-
-[notify.bark]
-# https://bark.day.app/
-enabled = false
-device_token = "your_device_token"
-```
-
-其中，electricity_fee 为电费单价，单位为元/度。0.54 为财务处公布的电费单价。
-
-`chazuo_threshold` 和 `kongtiao_threshold` 为电量余量阈值，当电量余量低于阈值时会发送通知。对于 iOS 用户，如果需要推送通知，请填写 `bark` 配置项，`device_token` 为 Bark 的设备码。关于 Bark 的更多信息请参考 [Bark 官网](https://bark.day.app/) 或 [Bark GitHub](https://github.com/Finb/Bark)。
-
-![Bark 通知](assets/bark.png)
 
 配置完成后，初始化数据库：
 
