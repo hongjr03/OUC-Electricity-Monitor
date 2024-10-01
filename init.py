@@ -19,7 +19,7 @@ if config["database"]["type"].lower() == "sqlite":
 elif config["database"]["type"].lower() == "mysql":
     db = MySQLDatabase(
         config["database"]["MySQL"]["database_name"],
-        user=config["database"]["MySQL"]["username"],
+        user=config["database"]["MySQL"]["user"],
         password=config["database"]["MySQL"]["password"],
         host=config["database"]["MySQL"]["host"],
         port=config["database"]["MySQL"]["port"],
