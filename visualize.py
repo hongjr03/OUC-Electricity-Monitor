@@ -5,8 +5,10 @@ from peewee import *
 from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, electricity_fee
 from toml import load
+import os
 
-config = load("config.toml")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config = load(script_dir + "/config.toml")
 if "visualize" not in config or "title" not in config["visualize"]:
     st.error("请先运行 init.py 文件")
     st.stop()

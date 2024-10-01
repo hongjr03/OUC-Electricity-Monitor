@@ -1,4 +1,4 @@
-import requests
+import requests,os
 from peewee import *
 import datetime
 from init import ChaZuo, KongTiao
@@ -36,8 +36,9 @@ def get_df(equipmentInfoId):
         "electricity": equipmentList["line1Electricity"],
     }
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
-config = load("config.toml")
+config = load(script_dir + "/config.toml")
 
 
 def get_latest_data(model):
