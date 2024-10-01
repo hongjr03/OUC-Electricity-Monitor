@@ -2,11 +2,13 @@
 
 # Install Python 3.10
 echo "Installing Python 3.10..."
-sudo apt update
-sudo apt install -y software-properties-common
-sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt update
-sudo apt install -y python3.10 python3.10-venv
+{
+    sudo apt update -qq && echo -n "Updating package lists... " && echo "Done."
+    sudo apt install -y -qq software-properties-common && echo -n "Installing software-properties-common... " && echo "Done."
+    sudo add-apt-repository -y ppa:deadsnakes/ppa -qq && echo -n "Adding deadsnakes PPA... " && echo "Done."
+    sudo apt update -qq && echo -n "Updating package lists again... " && echo "Done."
+    sudo apt install -y -qq python3.10 python3.10-venv && echo -n "Installing Python 3.10 and venv... " && echo "Done."
+} &> /dev/null
 echo "Python 3.10 has been installed."
 echo ""
 echo ""
