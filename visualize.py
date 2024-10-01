@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, electricity_fee
 from toml import load
 import os
+import altair as alt
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
@@ -92,7 +93,16 @@ def get_consumption(data, header, time_range):
     if not data.empty:
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
         with col1:
-            st.line_chart(data.set_index("time")["charge"])
+            y_min = data["charge"].min()
+            y_max = data["charge"].max()
+            chart = alt.Chart(data).mark_line().encode(
+                x='time:T',
+                y=alt.Y('charge:Q', scale=alt.Scale(domain=[y_min, y_max]))
+            ).properties(
+                width='container',
+                height=300
+            )
+            st.altair_chart(chart, use_container_width=True)
         with col2:
             current = data["charge"].iloc[-1]
             st.metric("当前剩余电量", f"{current:.2f}")
