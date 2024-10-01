@@ -10,6 +10,12 @@ config = load(script_dir + "/config.toml")
 
 db = None
 if config["database"]["type"].lower() == "sqlite":
+    try:
+        os.mkdir(os.path.join(script_dir, config["database"]["SQLite"]["file_path"]))
+    except FileExistsError:
+        config["database"]["SQLite"]["file_path"] = os.path.join(
+            script_dir, config["database"]["SQLite"]["file_path"]
+        )
     db = SqliteDatabase(config["database"]["SQLite"]["file_path"])
 elif config["database"]["type"].lower() == "mysql":
     db = MySQLDatabase(

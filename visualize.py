@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from peewee import *
 from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, electricity_fee
 from toml import load
