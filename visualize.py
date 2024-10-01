@@ -47,26 +47,35 @@ chazuo_data = get_data(ChaZuo, time_range)
 kongtiao_data = get_data(KongTiao, time_range)
 
 
-def get_consumption_rate(data):
-    consumption_rate = 0
+def get_consumption_rate(data, time_range):
+
     consumption = 0
     consumption_time = 0
+
+    if time_range == "最近 24 小时":
+        consumption_time = 24
+    elif time_range == "最近 7 天":
+        consumption_time = 7 * 24
+    elif time_range == "最近 30 天":
+        consumption_time = 30 * 24
+    else:
+        consumption_time = len(data)
+
     for i in range(1, len(data)):
         if data["charge"].iloc[i] < data["charge"].iloc[i - 1]:
             consumption += float(data["charge"].iloc[i - 1]) - float(
                 data["charge"].iloc[i]
             )
-            consumption_time += (
-                data["time"].iloc[i] - data["time"].iloc[i - 1]
-            ).total_seconds()
+
     if consumption_time > 0:
-        consumption_rate = consumption / consumption_time * 3600
+        consumption_rate = consumption / consumption_time
     else:
         consumption_rate = 0
+
     return consumption_rate
 
 
-def get_consumption(data, header):
+def get_consumption(data, header, time_range):
     st.header(header)
     if not data.empty:
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
@@ -78,7 +87,7 @@ def get_consumption(data, header):
             current = data["charge"].iloc[-1]
             st.metric("当前剩余电量", f"{current:.2f}")
             if len(data) > 1:
-                consumption_rate = get_consumption_rate(data)
+                consumption_rate = get_consumption_rate(data, time_range)
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
                 st.metric(
                     "相当于每天交",
@@ -88,8 +97,8 @@ def get_consumption(data, header):
         st.write("暂无电量数据")
 
 
-get_consumption(chazuo_data, "插座")
-get_consumption(kongtiao_data, "空调")
+get_consumption(chazuo_data, "插座", time_range)
+get_consumption(kongtiao_data, "空调", time_range)
 
 current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
 current_kongtiao = kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0

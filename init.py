@@ -1,6 +1,6 @@
 from peewee import *
 import datetime
-import time,os
+import time, os
 from toml import dump, load
 import requests
 
@@ -122,9 +122,9 @@ if __name__ == "__main__":
             config["student"]["equipments"][categoryEnergyName]["equipmentInfoId"] = (
                 eqptData[i]["equipmentInfoId"]
             )
-            config["student"]["equipments"][categoryEnergyName]["roomName"] = (
-                eqptData[i]["roomName"]
-            )
+            config["student"]["equipments"][categoryEnergyName]["roomName"] = eqptData[
+                i
+            ]["roomName"]
 
         with open("config.toml", "w", encoding="utf-8") as f:
             if "visualize" not in config or "title" not in config["visualize"]:
