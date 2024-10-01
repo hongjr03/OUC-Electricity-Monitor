@@ -8,7 +8,26 @@
 
 ## 使用
 
-首先，请根据 `requirements.txt` 安装依赖：
+首先，请确保您的 Python 版本为 3.8 及以上。创建虚拟环境：
+
+```bash
+python -m venv .venv
+```
+
+激活虚拟环境：
+
+```bash
+# Windows CMD
+.venv\Scripts\activate.bat
+
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# macOS and Linux
+source .venv/bin/activate
+```
+
+接着，根据 `requirements.txt` 安装依赖：
 
 ```bash
 pip install -r requirements.txt
