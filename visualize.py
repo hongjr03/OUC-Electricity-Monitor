@@ -51,28 +51,20 @@ def get_data(model, time_range):
     # 将 'charge' 列转换为 float 类型
     if "charge" in df.columns:
         df["charge"] = df["charge"].astype(float)
-
-    return df
+        
+    real_time_range = df["time"].max() - df["time"].min()
+    return df, real_time_range
 
 
 # 获取插座和空调数据
-chazuo_data = get_data(ChaZuo, time_range)
-kongtiao_data = get_data(KongTiao, time_range)
+chazuo_data, chazuo_tr = get_data(ChaZuo, time_range)
+kongtiao_data, kongtiao_tr = get_data(KongTiao, time_range)
 
 
-def get_consumption_rate(data, time_range):
+def get_consumption_rate(data, tr):
 
     consumption = 0
-    consumption_time = 0
-
-    if time_range == "最近 24 小时":
-        consumption_time = 24
-    elif time_range == "最近 7 天":
-        consumption_time = 7 * 24
-    elif time_range == "最近 30 天":
-        consumption_time = 30 * 24
-    else:
-        consumption_time = len(data)
+    consumption_time = tr.total_seconds() / 3600
 
     for i in range(1, len(data)):
         if data["charge"].iloc[i] < data["charge"].iloc[i - 1]:
@@ -88,7 +80,7 @@ def get_consumption_rate(data, time_range):
     return consumption_rate
 
 
-def get_consumption(data, header, time_range):
+def get_consumption(data, header, tr):
     st.header(header)
     if not data.empty:
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
@@ -107,7 +99,7 @@ def get_consumption(data, header, time_range):
             current = data["charge"].iloc[-1]
             st.metric("当前剩余电量", f"{current:.2f}")
             if len(data) > 1:
-                consumption_rate = get_consumption_rate(data, time_range)
+                consumption_rate = get_consumption_rate(data, tr)
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
                 st.metric(
                     "相当于每天交",
@@ -137,5 +129,5 @@ else:
     st.write("暂无完整的电量数据")
 
 
-get_consumption(chazuo_data, "插座", time_range)
-get_consumption(kongtiao_data, "空调", time_range)
+get_consumption(chazuo_data, "插座", chazuo_tr)
+get_consumption(kongtiao_data, "空调", kongtiao_tr)
