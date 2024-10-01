@@ -39,6 +39,33 @@ class KongTiao(Model):
         database = db
 
 
+# 被 bash 调用，返回 crontab 的配置
+def get_crontab():
+    # 如果有 crontab
+    if "crontab" in config["cron"]:
+        # check crontab
+        import re
+        
+        if re.match(r"^\*\/[1-9]\d* \* \* \* \*$", config["cron"]["crontab"]):
+            return config["cron"]["crontab"]
+        else:
+            config["cron"]["crontab"] = f"*/5 * * * *"
+            return f"*/5 * * * *"
+    elif "interval" in config["cron"]:
+        config["cron"]["interval"] = int(config["cron"]["interval"])
+        if config["cron"]["interval"] < 1:
+            config["cron"]["crontab"] = f"*/1 * * * *"
+            return f"*/1 * * * *"
+        elif config["cron"]["interval"] > 59:
+            config["cron"]["crontab"] = f"*/59 * * * *"
+            return f"*/59 * * * *"
+        else:
+            config["cron"]["crontab"] = f"*/{config['cron']['interval']} * * * *"
+            return f"*/{config['cron']['interval']} * * * *"
+    else:
+        config["cron"]["crontab"] = f"*/5 * * * *"
+        return f"*/5 * * * *"
+
 if __name__ == "__main__":
     id = config["student"]["id"]
 
@@ -85,7 +112,7 @@ if __name__ == "__main__":
                 print(f"[{i + 1}]: {category[i]['roomName']}")
 
             index = int(input("请输入方框内的编号：")) - 1
-            
+
             # 保留 "照明与插座" 和选择的空调末端
             eqptData = [
                 eqptData[i]
@@ -117,4 +144,5 @@ if __name__ == "__main__":
             if "visualize" not in config or "title" not in config["visualize"]:
                 config["visualize"] = {}
                 config["visualize"]["title"] = "Electricity!"
+            get_crontab()
             dump(config, f)
