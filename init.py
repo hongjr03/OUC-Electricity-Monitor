@@ -10,11 +10,10 @@ config = load(script_dir + "/config.toml")
 
 db = None
 if config["database"]["type"].lower() == "sqlite":
-    try:
-        os.mkdir(os.path.join(script_dir, config["database"]["SQLite"]["file_path"]))
-    except FileExistsError:
-        config["database"]["SQLite"]["file_path"] = os.path.join(
-            script_dir, config["database"]["SQLite"]["file_path"]
+    # if the file exists, change to its absolute path
+    if os.path.exists(config["database"]["SQLite"]["file_path"]):
+        config["database"]["SQLite"]["file_path"] = os.path.abspath(
+            config["database"]["SQLite"]["file_path"]
         )
     db = SqliteDatabase(config["database"]["SQLite"]["file_path"])
 elif config["database"]["type"].lower() == "mysql":
@@ -51,7 +50,7 @@ def get_crontab():
     if "crontab" in config["cron"]:
         # check crontab
         import re
-        
+
         if re.match(r"^\*\/[1-9]\d* \* \* \* \*$", config["cron"]["crontab"]):
             return config["cron"]["crontab"]
         else:
@@ -71,6 +70,7 @@ def get_crontab():
     else:
         config["cron"]["crontab"] = f"*/5 * * * *"
         return f"*/5 * * * *"
+
 
 if __name__ == "__main__":
     id = config["student"]["id"]
