@@ -25,8 +25,10 @@ if col2.button("获取最新数据"):
     with st.spinner('获取数据...'):
         from get import get_latest_data
 
-        current_chazuo, current_kongtiao = get_latest_data()
-        if current_chazuo > 0 or current_kongtiao > 0:
+        data = get_latest_data()
+        if data["status"] == 1:
+            current_chazuo = data["chazuo"]
+            current_kongtiao = data["kongtiao"]
             st.toast("获取数据成功，已更新到数据库与页面！", icon="🔥")
         else:
             st.toast("获取数据失败，数据为 0，请检查 config 配置并重新初始化。", icon="🚨")

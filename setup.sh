@@ -23,7 +23,8 @@ echo ""
 
 # Install required packages
 echo "Installing required packages..."
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+cat requirements.txt
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple &> /dev/null
 echo "Required packages have been installed."
 echo ""
 echo ""
@@ -38,6 +39,11 @@ echo ""
 # Test if get.py works
 echo "Testing get.py..."
 python get.py
+# 如果 get.py 运行失败，exit(1)
+if [ $? -ne 0 ]; then
+    echo "get.py failed. Please recheck the configuration. Exiting..."
+    exit 1
+fi
 echo "get.py works."
 echo ""
 echo ""

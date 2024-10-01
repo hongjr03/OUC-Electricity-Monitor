@@ -70,22 +70,33 @@ def get_latest_data():
         KongTiao.create(charge=kongtiao_response["total"], time=datetime.datetime.now())
     except Exception as e:
         print(e)
-        print("获取数据失败")
-        return 0, 0
-    return chazuo_response["total"], kongtiao_response["total"]
+        print("获取数据失败，请检查 config 配置并重新初始化。")
+        return {
+            "status": 0,
+            "chazuo": 0,
+            "kongtiao": 0,
+        }
+        # 状态码，插座电量，空调电量
+
+    return {
+        "status": 1,
+        "chazuo": chazuo_response["total"],
+        "kongtiao": kongtiao_response["total"],
+    }
 
 
 def notify(chazuo_info, kongtiao_info):
     chazuo_threshold = config["notify"]["chazuo_threshold"]
     kongtiao_threshold = config["notify"]["kongtiao_threshold"]
-    
+
     try:
         from BarkNotificator import BarkNotificator
+
         bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
     except ImportError:
         print("未安装 BarkNotificator")
         return
-    
+
     if chazuo_info < chazuo_threshold:
         bark.send(
             title="插座电量不足",
@@ -116,7 +127,14 @@ if __name__ == "__main__":
     print("空调 (latest)：", db_kongtiao_info)
     print()
 
-    chazuo_info, kongtiao_info = get_latest_data()
+    data = get_latest_data()
+    if data["status"] == 0:
+        exit(1)
+    else:
+        chazuo_info = data["chazuo"]
+        kongtiao_info = data["kongtiao"]
 
     if config["notify"]["bark"]["enabled"]:
         notify(chazuo_info, kongtiao_info)
+
+    # 返回值
