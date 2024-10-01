@@ -3,7 +3,6 @@ from peewee import *
 import datetime
 from init import ChaZuo, KongTiao
 from toml import load
-from BarkNotificator import BarkNotificator
 import pandas as pd
 
 
@@ -79,8 +78,14 @@ def get_latest_data():
 def notify(chazuo_info, kongtiao_info):
     chazuo_threshold = config["notify"]["chazuo_threshold"]
     kongtiao_threshold = config["notify"]["kongtiao_threshold"]
-
-    bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
+    
+    try:
+        from BarkNotificator import BarkNotificator
+        bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
+    except ImportError:
+        print("未安装 BarkNotificator")
+        return
+    
     if chazuo_info < chazuo_threshold:
         bark.send(
             title="插座电量不足",
@@ -111,7 +116,7 @@ if __name__ == "__main__":
     print("空调 (latest)：", db_kongtiao_info)
     print()
 
-    chazuo_info, kongtiao_info = get_latest_data(config)
+    chazuo_info, kongtiao_info = get_latest_data()
 
     if config["notify"]["bark"]["enabled"]:
         notify(chazuo_info, kongtiao_info)

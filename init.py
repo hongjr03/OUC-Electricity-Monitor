@@ -80,25 +80,12 @@ if __name__ == "__main__":
                         }
                     )
 
-            import keyboard
-            import time
-
             print("请选择一个空调末端：")
             for i in range(len(category)):
-                print(f"{i + 1}: {category[i]['roomName']}")
+                print(f"[{i + 1}]: {category[i]['roomName']}")
 
-            index = 0
-            while True:
-                if keyboard.is_pressed("up"):
-                    index = (index - 1) % len(category)
-                    time.sleep(0.2)
-                elif keyboard.is_pressed("down"):
-                    index = (index + 1) % len(category)
-                    time.sleep(0.2)
-                elif keyboard.is_pressed("enter"):
-                    break
-                print(f"\r当前选择：{index + 1}: {category[index]['roomName']}", end="")
-
+            index = int(input("请输入方框内的编号：")) - 1
+            
             # 保留 "照明与插座" 和选择的空调末端
             eqptData = [
                 eqptData[i]

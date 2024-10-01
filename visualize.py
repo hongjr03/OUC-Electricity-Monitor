@@ -14,23 +14,22 @@ if "visualize" not in config or "title" not in config["visualize"]:
 # Streamlit 应用
 st.title(config["visualize"]["title"])
 
+col1, col2 = st.columns([3, 1], vertical_alignment="bottom")
 
-# 时间范围选择
-time_range = st.selectbox(
+# 选择时间范围
+time_range = col1.selectbox(
     "选择时间范围", ("最近 24 小时", "最近 7 天", "最近 30 天", "全部")
 )
-
-
 # 按钮，点击获取最新数据
-if st.button("获取最新数据"):
-    try:
+if col2.button("获取最新数据"):
+    with st.spinner('获取数据...'):
         from get import get_latest_data
 
         current_chazuo, current_kongtiao = get_latest_data()
-        st.success("获取数据成功，已更新到数据库", icon="🔥")
-    except Exception as e:
-        st.error("获取数据失败")
-        st.error(e)
+        if current_chazuo > 0 or current_kongtiao > 0:
+            st.toast("获取数据成功，已更新到数据库与页面！", icon="🔥")
+        else:
+            st.toast("获取数据失败，数据为 0，请检查 config 配置并重新初始化。", icon="🚨")
 
 
 # 根据选择的时间范围获取数据
