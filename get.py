@@ -60,13 +60,13 @@ def get_latest_data():
             config["student"]["equipments"]["chazuo"]["equipmentInfoId"]
         )
         print("插座：", chazuo_response["total"])
+        ChaZuo.create(charge=chazuo_response["total"], time=datetime.datetime.now())
+
         # 插座
         kongtiao_response = get_df(
             config["student"]["equipments"]["kongtiao"]["equipmentInfoId"]
         )
         print("空调：", kongtiao_response["total"])
-
-        ChaZuo.create(charge=chazuo_response["total"], time=datetime.datetime.now())
         KongTiao.create(charge=kongtiao_response["total"], time=datetime.datetime.now())
     except Exception as e:
         print(e)
