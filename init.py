@@ -1,10 +1,12 @@
 from peewee import *
 import datetime
-import time
+import time,os
 from toml import dump, load
 import requests
 
-config = load("config.toml")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+config = load(script_dir + "/config.toml")
 
 db = None
 if config["database"]["type"].lower() == "sqlite":
