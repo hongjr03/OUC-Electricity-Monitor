@@ -1,6 +1,5 @@
 barknotificator==0.2.0
 keyboard==0.13.5
 peewee==3.17.6
-plotly==5.24.1
 streamlit==1.38.0
 toml==0.10.2

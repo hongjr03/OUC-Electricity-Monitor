@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from peewee import *
 from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, electricity_fee
@@ -15,10 +14,23 @@ if "visualize" not in config or "title" not in config["visualize"]:
 # Streamlit 应用
 st.title(config["visualize"]["title"])
 
+
 # 时间范围选择
 time_range = st.selectbox(
     "选择时间范围", ("最近 24 小时", "最近 7 天", "最近 30 天", "全部")
 )
+
+
+# 按钮，点击获取最新数据
+if st.button("获取最新数据"):
+    try:
+        from get import get_latest_data
+
+        current_chazuo, current_kongtiao = get_latest_data()
+        st.success("获取数据成功，已更新到数据库", icon="🔥")
+    except Exception as e:
+        st.error("获取数据失败")
+        st.error(e)
 
 
 # 根据选择的时间范围获取数据
@@ -80,10 +92,8 @@ def get_consumption(data, header, time_range):
     if not data.empty:
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
         with col1:
-            fig = px.line(data, x="time", y="charge")
-            st.plotly_chart(fig, use_container_width=True)
+            st.line_chart(data.set_index("time")["charge"])
         with col2:
-            # st.write(config["student"]["equipments"]["chazuo"]["roomName"])
             current = data["charge"].iloc[-1]
             st.metric("当前剩余电量", f"{current:.2f}")
             if len(data) > 1:
@@ -97,29 +107,25 @@ def get_consumption(data, header, time_range):
         st.write("暂无电量数据")
 
 
-get_consumption(chazuo_data, "插座", time_range)
-get_consumption(kongtiao_data, "空调", time_range)
-
 current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
 current_kongtiao = kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
+
+
 # 总剩余电量
 st.header("总剩余电量")
 if not chazuo_data.empty and not kongtiao_data.empty:
-    col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
-    with col1:
-        total_remaining = current_chazuo + current_kongtiao
-        # 剩余电量比例饼图
-        pie_data = pd.DataFrame(
-            {"类型": ["插座", "空调"], "剩余电量": [current_chazuo, current_kongtiao]}
-        )
-        fig_pie = px.pie(pie_data, values="剩余电量", names="类型")
-        st.plotly_chart(fig_pie, use_container_width=True)
-    with col2:
-        st.metric("插座剩余", f"{current_chazuo:.2f}")
-        st.metric("空调剩余", f"{current_kongtiao:.2f}")
-        st.metric(
-            "相当于还有",
-            f"¥{total_remaining * electricity_fee:.2f}",
-        )
+    chazuo_col, kongtiao_col, total_col = st.columns(3)
+    total_remaining = current_chazuo + current_kongtiao
+
+    chazuo_col.metric("插座剩余", f"{current_chazuo:.2f}")
+    kongtiao_col.metric("空调剩余", f"{current_kongtiao:.2f}")
+    total_col.metric(
+        "相当于还有",
+        f"¥{total_remaining * electricity_fee:.2f}",
+    )
 else:
     st.write("暂无完整的电量数据")
+
+
+get_consumption(chazuo_data, "插座", time_range)
+get_consumption(kongtiao_data, "空调", time_range)
