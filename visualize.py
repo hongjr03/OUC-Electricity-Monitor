@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, electricity_fee
 from toml import load
 import os
-from streamlit_echarts import st_echarts
+from streamlit_echarts import st_pyecharts
+from pyecharts.charts import Line
+from pyecharts import options as opts
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
@@ -97,29 +99,24 @@ def visualize_consumption_data(data, header, tr, current):
             chart_data = consumption_data["charge"].tolist().copy()
             # .4f
             chart_data = [f"{i:.4f}" for i in chart_data]
-            options = {
-                "xAxis": {
-                    "type": "category",
-                    "data": consumption_data["time"]
-                    .dt.strftime("%Y-%m-%d %H:%M:%S")
-                    .tolist(),
-                },
-                "yAxis": {"type": "value"},
-                "series": [
-                    {
-                        "data": chart_data,
-                        "type": "line",
-                        "smooth": True  # 使曲线变平滑
-                    }
-                ],
-                "tooltip": {
-                    "trigger": "axis",
-                    "axisPointer": {
-                        "type": "cross"
-                    }
-                }
-            }
-            st_echarts(options=options)
+            c = (
+                Line()
+                .add_xaxis(
+                    consumption_data["time"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
+                )
+                .add_yaxis(
+                    series_name="电量",
+                    y_axis=chart_data,
+                    is_smooth=True,
+                    label_opts=opts.LabelOpts(is_show=False),
+                )
+                .set_global_opts(
+                    xaxis_opts={"type": "category"},
+                    yaxis_opts={"type": "value"},
+                    tooltip_opts={"trigger": "axis", "axisPointer": {"type": "cross"}},
+                )
+            )
+            st_pyecharts(c)
         with col2:
             if len(consumption_data) > 1:
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
