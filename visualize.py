@@ -207,33 +207,17 @@ else:
 visualize_consumption_data(chazuo_data, "插座", chazuo_tr, current_chazuo)
 visualize_consumption_data(kongtiao_data, "空调", kongtiao_tr, current_kongtiao)
 
-footer = """<style>
-a:link , a:visited{
-color: blue;
-background-color: transparent;
-text-decoration: underline;
-}
-
-a:hover,  a:active {
-color: red;
-background-color: transparent;
-text-decoration: underline;
-}
-
-.footer {
-position: fixed;
-left: 0;
-bottom: 0;
-width: 100%;
-background-color: white;
-color: black;
-text-align: center;
-}
+footer = """
+<style>
+    footer {
+        text-align: center;
+        padding: 10px;
+    }
 </style>
-<div class="footer">
-<p>
-Powered by <a style='display: block; text-align: center;' href="https://streamlit.io/" target="_blank">Streamlit</a>. Open source on <a style='display: block; text-align: center;' href="https://streamlit.io/" target="_blank">GitHub</a>.
-</p>
-</div>
+
+<footer>
+Powered by <a href="https://streamlit.io/">Streamlit</a>. Open source on <a href="https://github.com/hongjr03/OUC-Electricity-Monitor">GitHub</a>.
+</footer>
 """
+
 st.markdown(footer, unsafe_allow_html=True)
