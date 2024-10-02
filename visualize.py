@@ -22,8 +22,12 @@ col1, col2 = st.columns([3, 1], vertical_alignment="bottom")
 time_range = col1.selectbox(
     "选择时间范围", ("最近 24 小时", "最近 7 天", "最近 30 天", "全部")
 )
-# 按钮，点击获取最新数据
-if col2.button("获取最新数据"):
+
+global current_chazuo
+global current_kongtiao
+
+update_time = st.empty()
+def fetch_data():
     with st.spinner("获取数据..."):
         from get import get_latest_data
 
@@ -36,6 +40,10 @@ if col2.button("获取最新数据"):
             st.toast(
                 "获取数据失败，数据为 0，请检查 config 配置并重新初始化。", icon="🚨"
             )
+
+
+if col2.button("获取最新数据"):
+    fetch_data()
 
 
 # 根据选择的时间范围获取数据
@@ -93,12 +101,13 @@ def get_consumption(data, tr):
 def visualize_consumption_data(data, header, tr, current):
     st.header(header)
     consumption_data, consumption_rate = get_consumption(data, tr)
-    if not consumption_data.empty:
+    update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
+    if consumption_data is not None:
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
         with col1:
             chart_data = consumption_data["charge"].tolist().copy()
-            # .4f
-            chart_data = [f"{i:.4f}" for i in chart_data]
+            chart_data = [f"{i:.6f}" for i in chart_data]
+            # print(len(chart_data))
             c = (
                 Line()
                 .add_xaxis(
@@ -111,9 +120,20 @@ def visualize_consumption_data(data, header, tr, current):
                     label_opts=opts.LabelOpts(is_show=False),
                 )
                 .set_global_opts(
-                    xaxis_opts={"type": "category"},
-                    yaxis_opts={"type": "value"},
-                    tooltip_opts={"trigger": "axis", "axisPointer": {"type": "cross"}},
+                    xaxis_opts=opts.AxisOpts(type_="category", is_scale=True),
+                    yaxis_opts=opts.AxisOpts(type_="value"),
+                    datazoom_opts=[
+                        opts.DataZoomOpts(
+                            type_="inside",
+                            xaxis_index=0,
+                            range_start=40,  # 初始化滑动窗口在最末尾
+                            range_end=100,
+                        )
+                    ],
+                    tooltip_opts=opts.TooltipOpts(
+                        trigger="axis", axis_pointer_type="cross"
+                    ),
+                    legend_opts=opts.LegendOpts(is_show=False),
                 )
             )
             st_pyecharts(c)
@@ -146,17 +166,20 @@ def visualize_consumption_data(data, header, tr, current):
                         "还可以使用",
                         f"{available_time.seconds // 60} 分钟",
                     )
+    # NoneType' object has no attribute 'empty
     else:
-        st.write("暂无电量数据")
-
-
-current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
-current_kongtiao = kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
+        st.write("暂无电量数据，尝试获取最新数据...")
+        fetch_data()
 
 
 # 总剩余电量
 st.header("总剩余电量")
+
 if not chazuo_data.empty and not kongtiao_data.empty:
+    current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
+    current_kongtiao = (
+        kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
+    )
     chazuo_col, kongtiao_col, total_col = st.columns(3)
     total_remaining = current_chazuo + current_kongtiao
 
