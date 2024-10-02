@@ -25,6 +25,7 @@ time_range = col1.selectbox(
 
 global current_chazuo
 global current_kongtiao
+global current_yue
 
 update_time = st.empty()
 def fetch_data():
@@ -47,7 +48,7 @@ if col2.button("获取最新数据"):
 
 
 # 根据选择的时间范围获取数据
-def get_data(model, time_range):
+def get_data(model, time_range, is_YuE=False):
     if time_range == "最近 24 小时":
         start_time = datetime.now() - timedelta(hours=24)
     elif time_range == "最近 7 天":
@@ -60,10 +61,14 @@ def get_data(model, time_range):
     query = model.select().where(model.time >= start_time).order_by(model.time)
     df = pd.DataFrame(list(query.dicts()))
 
-    # 将 'charge' 列转换为 float 类型
-    if "charge" in df.columns:
-        df["charge"] = df["charge"].astype(float)
-
+    if not is_YuE:
+        # 将 'charge' 列转换为 float 类型
+        if "charge" in df.columns:
+            df["charge"] = df["charge"].astype(float)
+    else:
+        if "balance" in df.columns:
+            df["balance"] = df["balance"].astype(float)
+    
     real_time_range = df["time"].max() - df["time"].min()
     return df, real_time_range
 
@@ -71,7 +76,7 @@ def get_data(model, time_range):
 # 获取插座和空调数据
 chazuo_data, chazuo_tr = get_data(ChaZuo, time_range)
 kongtiao_data, kongtiao_tr = get_data(KongTiao, time_range)
-yue_data, yue_tr = get_data(YuE, time_range)
+yue_data, yue_tr = get_data(YuE, time_range, is_YuE=True)
 
 
 def get_consumption(data, tr):
@@ -137,7 +142,7 @@ def visualize_consumption_data(data, header, tr, current):
                     legend_opts=opts.LegendOpts(is_show=False),
                 )
             )
-            st_pyecharts(c)
+            st_pyecharts(c, key=header)
         with col2:
             if len(consumption_data) > 1:
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
@@ -181,7 +186,7 @@ if not chazuo_data.empty and not kongtiao_data.empty:
     current_kongtiao = (
         kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
     )
-    current_yue = yue_data["charge"].iloc[-1] if not yue_data.empty else 0
+    current_yue = yue_data["balance"].iloc[-1] if not yue_data.empty else 0
     
     chazuo_col, kongtiao_col, total_col, yue_col = st.columns(4)
     total_remaining = current_chazuo + current_kongtiao
