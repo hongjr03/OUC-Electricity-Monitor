@@ -5,9 +5,20 @@ from init import ChaZuo, KongTiao, YuE
 from toml import load
 import pandas as pd
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config = load(script_dir + "/config.toml")
+
+try:
+    if config["student"]["proxy"] == "false":
+        root_url = "http://10.128.13.25"
+    else:
+        root_url = "https://lsky.lmark.cc"
+except Exception as e:
+    root_url = "https://lsky.lmark.cc"
+
 
 def get_df(equipmentInfoId):
-    url = "http://10.128.13.25/feemanager/findSurplusElectricByMeterSearchPower.action"
+    url = f"{root_url}/feemanager/findSurplusElectricByMeterSearchPower.action"
     flag = False
     counter = 0
     while not flag:
@@ -47,7 +58,7 @@ def get_yue(account):
     }
     dz_payload = {"account": account}
     response = requests.post(
-        "http://10.128.13.25/hydxcas/getDzByNo", headers=headers, json=dz_payload
+        f"{root_url}/hydxcas/getDzByNo", headers=headers, json=dz_payload
     )
     if response.status_code == 200:
         response_data = response.json()
@@ -56,11 +67,6 @@ def get_yue(account):
         balance = value_dict.get("balance")
         balance = int(balance)
         return {"balance": f"{balance/100:.2f}"}
-
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-
-config = load(script_dir + "/config.toml")
 
 
 def get_latest_db_data(model, is_YuE=False):

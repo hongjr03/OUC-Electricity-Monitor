@@ -19,18 +19,14 @@
 [database]
 type = "SQLite" # 数据库类型，支持 SQLite 和 MySQL
 
-[notify]
-chazuo_threshold = 10   # 插座电量阈值，单位为度
-kongtiao_threshold = 10 # 空调电量阈值，单位为度
-
 [student]
 id = "your_student_id" # 学号，请务必填写
+proxy = false          # 如果需要代理，请设置为 true
 electricity_fee = 0.54 # 电费单价，单位为 RMB/度
 
 [cron]
 interval = 5            # 定时任务执行间隔，单位为分钟，例如 5 表示每 5 分钟执行一次
 crontab = "*/5 * * * *" # 定时任务执行时间，例如 "*/5 * * * *" 表示每 5 分钟执行一次
-
 
 [visualize]
 title = "Electricity!" # 可视化标题

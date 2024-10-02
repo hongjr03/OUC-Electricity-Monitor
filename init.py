@@ -5,8 +5,15 @@ from toml import dump, load
 import requests
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-
 config = load(script_dir + "/config.toml")
+
+try:
+    if config["student"]["proxy"] == "false":
+        root_url = "http://10.128.13.25"
+    else:
+        root_url = "https://lsky.lmark.cc"
+except Exception as e:
+    root_url = "https://lsky.lmark.cc"
 
 db = None
 if config["database"]["type"].lower() == "sqlite":
@@ -95,7 +102,7 @@ if __name__ == "__main__":
     sno_payload = {"sno": id}
 
     response = requests.post(
-        "http://10.128.13.25/hydxcas/getCadByNo", headers=headers, json=sno_payload
+        f"{root_url}/hydxcas/getCadByNo", headers=headers, json=sno_payload
     )
 
     if response.status_code == 200:
@@ -176,7 +183,7 @@ if __name__ == "__main__":
 
     dz_payload = {"account": account}
     response = requests.post(
-        "http://10.128.13.25/hydxcas/getDzByNo", headers=headers, json=dz_payload
+        f"{root_url}/hydxcas/getDzByNo", headers=headers, json=dz_payload
     )
     if response.status_code == 200:
         try:
