@@ -111,7 +111,7 @@ if __name__ == "__main__":
             print("获取数据失败，请检查 config 配置并重新初始化。")
             exit(1)
 
-        card = value["card"]
+        card = value_dict["card"]
         try:
             card_dict = eval(card)[0]
             account = card_dict["account"]
