@@ -1,4 +1,5 @@
 peewee==3.17.6
 streamlit==1.38.0
+streamlit_echarts==0.4.0
 toml==0.10.2
 pymysql

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, electricity_fee
 from toml import load
 import os
-import altair as alt
+from streamlit_echarts import st_echarts
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
@@ -22,7 +22,7 @@ time_range = col1.selectbox(
 )
 # 按钮，点击获取最新数据
 if col2.button("获取最新数据"):
-    with st.spinner('获取数据...'):
+    with st.spinner("获取数据..."):
         from get import get_latest_data
 
         data = get_latest_data()
@@ -31,7 +31,9 @@ if col2.button("获取最新数据"):
             current_kongtiao = data["kongtiao"]
             st.toast("获取数据成功，已更新到数据库与页面！", icon="🔥")
         else:
-            st.toast("获取数据失败，数据为 0，请检查 config 配置并重新初始化。", icon="🚨")
+            st.toast(
+                "获取数据失败，数据为 0，请检查 config 配置并重新初始化。", icon="🚨"
+            )
 
 
 # 根据选择的时间范围获取数据
@@ -51,7 +53,7 @@ def get_data(model, time_range):
     # 将 'charge' 列转换为 float 类型
     if "charge" in df.columns:
         df["charge"] = df["charge"].astype(float)
-        
+
     real_time_range = df["time"].max() - df["time"].min()
     return df, real_time_range
 
@@ -61,50 +63,92 @@ chazuo_data, chazuo_tr = get_data(ChaZuo, time_range)
 kongtiao_data, kongtiao_tr = get_data(KongTiao, time_range)
 
 
-def get_consumption_rate(data, tr):
+def get_consumption(data, tr):
+    # print(tr)
+    consumption_data = None
+    consumption_time = tr
 
+    # 计算相邻两个数据点的差值
     consumption = 0
-    consumption_time = tr.total_seconds() / 3600
-
     for i in range(1, len(data)):
+        # print(data["charge"].iloc[i], data["charge"].iloc[i - 1])
         if data["charge"].iloc[i] < data["charge"].iloc[i - 1]:
-            consumption += float(data["charge"].iloc[i - 1]) - float(
-                data["charge"].iloc[i]
-            )
-
-    if consumption_time > 0:
-        consumption_rate = consumption / consumption_time
+            consumption += data["charge"].iloc[i - 1] - data["charge"].iloc[i]
+        else:
+            consumption_time -= data["time"].iloc[i - 1] - data["time"].iloc[i]
+        consumption_data = pd.DataFrame(
+            {"time": data["time"], "charge": data["charge"].diff().fillna(0).abs()}
+        )
+    # print(consumption_time)
+    if consumption_time.total_seconds() > 0:
+        consumption_rate = consumption / (consumption_time / timedelta(hours=1))
     else:
         consumption_rate = 0
 
-    return consumption_rate
+    return consumption_data, consumption_rate
 
 
-def get_consumption(data, header, tr):
+def visualize_consumption_data(data, header, tr, current):
     st.header(header)
-    if not data.empty:
+    consumption_data, consumption_rate = get_consumption(data, tr)
+    if not consumption_data.empty:
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
         with col1:
-            y_min = data["charge"].min()
-            y_max = data["charge"].max()
-            chart = alt.Chart(data).mark_line().encode(
-                x='time:T',
-                y=alt.Y('charge:Q', scale=alt.Scale(domain=[y_min, y_max]))
-            ).properties(
-                width='container',
-                height=300
-            )
-            st.altair_chart(chart, use_container_width=True)
+            chart_data = consumption_data["charge"].tolist().copy()
+            # .4f
+            chart_data = [f"{i:.4f}" for i in chart_data]
+            options = {
+                "xAxis": {
+                    "type": "category",
+                    "data": consumption_data["time"]
+                    .dt.strftime("%Y-%m-%d %H:%M:%S")
+                    .tolist(),
+                },
+                "yAxis": {"type": "value"},
+                "series": [
+                    {
+                        "data": chart_data,
+                        "type": "line",
+                        "smooth": True  # 使曲线变平滑
+                    }
+                ],
+                "tooltip": {
+                    "trigger": "axis",
+                    "axisPointer": {
+                        "type": "cross"
+                    }
+                }
+            }
+            st_echarts(options=options)
         with col2:
-            current = data["charge"].iloc[-1]
-            st.metric("当前剩余电量", f"{current:.2f}")
-            if len(data) > 1:
-                consumption_rate = get_consumption_rate(data, tr)
+            if len(consumption_data) > 1:
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
                 st.metric(
                     "相当于每天交",
                     f"¥{consumption_rate * 24 * electricity_fee:.2f}",
                 )
+                # current / consumption_rate 转换成 时间
+                available_time = current / consumption_rate
+                try:
+                    available_time = timedelta(hours=available_time)
+                # OverflowError: cannot convert float infinity to integer
+                except OverflowError:
+                    available_time = timedelta(days=0)
+                if available_time.days > 0:
+                    st.metric(
+                        "还可以使用",
+                        f"{available_time.days} 天",
+                    )
+                elif available_time.seconds // 3600 > 0:
+                    st.metric(
+                        "还可以使用",
+                        f"{available_time.seconds // 3600} 小时",
+                    )
+                elif available_time.seconds // 60 > 0:
+                    st.metric(
+                        "还可以使用",
+                        f"{available_time.seconds // 60} 分钟",
+                    )
     else:
         st.write("暂无电量数据")
 
@@ -129,5 +173,5 @@ else:
     st.write("暂无完整的电量数据")
 
 
-get_consumption(chazuo_data, "插座", chazuo_tr)
-get_consumption(kongtiao_data, "空调", kongtiao_tr)
+visualize_consumption_data(chazuo_data, "插座", chazuo_tr, current_chazuo)
+visualize_consumption_data(kongtiao_data, "空调", kongtiao_tr, current_kongtiao)

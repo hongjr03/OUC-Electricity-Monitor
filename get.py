@@ -91,10 +91,9 @@ def notify(chazuo_info, kongtiao_info):
 
     try:
         from BarkNotificator import BarkNotificator
-
         bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
     except ImportError:
-        print("未安装 BarkNotificator")
+        print("未安装 BarkNotificator，请执行 `pip install BarkNotificator` 安装。")
         return
 
     if chazuo_info < chazuo_threshold:
