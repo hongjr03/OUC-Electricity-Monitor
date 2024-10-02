@@ -63,16 +63,22 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
 
 
-def get_latest_db_data(model):
+def get_latest_db_data(model, is_YuE=False):
     # 查询数据库，按时间降序排列，获取第一条记录
     query = model.select().order_by(model.time.desc()).limit(1)
     df = pd.DataFrame(list(query.dicts()))
 
-    # 将 'charge' 列转换为 float 类型
-    if "charge" in df.columns:
-        df["charge"] = df["charge"].astype(float)
+    if not is_YuE:
+        # 将 'charge' 列转换为 float 类型
+        if "charge" in df.columns:
+            df["charge"] = df["charge"].astype(float)
 
-    return df["charge"].values[0] if not df.empty else 0.0
+        return df["charge"].values[0] if not df.empty else 0.0
+    else:
+        if "balance" in df.columns:
+            df["balance"] = df["balance"].astype(float)
+
+        return df["balance"].values[0] if not df.empty else 0.0
 
 
 def get_latest_data():
@@ -158,7 +164,7 @@ if __name__ == "__main__":
     # 获取距离现在最近的插座和空调数据
     db_chazuo_info = get_latest_db_data(ChaZuo)
     db_kongtiao_info = get_latest_db_data(KongTiao)
-    db_yue_info = get_latest_db_data(YuE)
+    db_yue_info = get_latest_db_data(YuE, is_YuE=True)
 
     data = get_latest_data()
     if data["status"] == 0:
