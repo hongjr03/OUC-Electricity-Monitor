@@ -180,7 +180,9 @@ if __name__ == "__main__":
     )
     if response.status_code == 200:
         try:
+            YuE.create_table()
             config["student"]["account"] = account
+
         except Exception as e:
             print(e)
             print("处理账户信息失败，请检查 config 配置并重新初始化。")
@@ -195,3 +197,14 @@ if __name__ == "__main__":
             config["visualize"]["title"] = "Electricity!"
         get_crontab()
         dump(config, f)
+
+    from get import get_latest_data
+
+    data = get_latest_data()
+    if data["status"] == 0:
+        exit(1)
+    else:
+        ChaZuo.create(charge=data["chazuo"], time=data["time"])
+        KongTiao.create(charge=data["kongtiao"], time=data["time"])
+        YuE.create(balance=data["yue"], time=data["time"])
+        print("初始化成功并已更新数据库！")

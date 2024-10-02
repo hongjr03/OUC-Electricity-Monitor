@@ -82,19 +82,13 @@ def get_latest_data():
             config["student"]["equipments"]["chazuo"]["equipmentInfoId"]
         )
         print("插座：", chazuo_response["total"])
-        ChaZuo.create(charge=chazuo_response["total"], time=datetime.datetime.now())
-
-        # 插座
         kongtiao_response = get_df(
             config["student"]["equipments"]["kongtiao"]["equipmentInfoId"]
         )
         print("空调：", kongtiao_response["total"])
-        KongTiao.create(charge=kongtiao_response["total"], time=datetime.datetime.now())
-
-        # 余额
         yue_response = get_yue(config["student"]["account"])
         print("余额：", yue_response["balance"])
-        YuE.create(balance=yue_response["balance"], time=datetime.datetime.now())
+        # YuE.create(balance=yue_response["balance"], time=datetime.datetime.now())
     except Exception as e:
         print(e)
         print("获取数据失败，请检查 config 配置并重新初始化。")
@@ -104,6 +98,7 @@ def get_latest_data():
             "chazuo": 0,
             "kongtiao": 0,
             "yue": 0,
+            "time": datetime.datetime.now(),
         }
         # 状态码，插座电量，空调电量
 
@@ -112,6 +107,7 @@ def get_latest_data():
         "chazuo": chazuo_response["total"],
         "kongtiao": kongtiao_response["total"],
         "yue": yue_response["balance"],
+        "time": datetime.datetime.now(),
     }
 
 
@@ -168,6 +164,10 @@ if __name__ == "__main__":
     if data["status"] == 0:
         exit(1)
     else:
+        ChaZuo.create(charge=data["chazuo"], time=data["time"])
+        KongTiao.create(charge=data["kongtiao"], time=data["time"])
+        YuE.create(balance=data["yue"], time=data["time"])
+
         chazuo_info = data["chazuo"]
         kongtiao_info = data["kongtiao"]
     yue_info = data["yue"]
