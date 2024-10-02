@@ -28,6 +28,8 @@ global current_kongtiao
 global current_yue
 
 update_time = st.empty()
+
+
 def fetch_data():
     with st.spinner("获取数据..."):
         from get import get_latest_data
@@ -68,7 +70,7 @@ def get_data(model, time_range, is_YuE=False):
     else:
         if "balance" in df.columns:
             df["balance"] = df["balance"].astype(float)
-    
+
     real_time_range = df["time"].max() - df["time"].min()
     return df, real_time_range
 
@@ -187,7 +189,7 @@ if not chazuo_data.empty and not kongtiao_data.empty:
         kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
     )
     current_yue = yue_data["balance"].iloc[-1] if not yue_data.empty else 0
-    
+
     chazuo_col, kongtiao_col, total_col, yue_col = st.columns(4)
     total_remaining = current_chazuo + current_kongtiao
 
@@ -204,3 +206,34 @@ else:
 
 visualize_consumption_data(chazuo_data, "插座", chazuo_tr, current_chazuo)
 visualize_consumption_data(kongtiao_data, "空调", kongtiao_tr, current_kongtiao)
+
+footer = """<style>
+a:link , a:visited{
+color: blue;
+background-color: transparent;
+text-decoration: underline;
+}
+
+a:hover,  a:active {
+color: red;
+background-color: transparent;
+text-decoration: underline;
+}
+
+.footer {
+position: fixed;
+left: 0;
+bottom: 0;
+width: 100%;
+background-color: white;
+color: black;
+text-align: center;
+}
+</style>
+<div class="footer">
+<p>
+Powered by <a style='display: block; text-align: center;' href="https://streamlit.io/" target="_blank">Streamlit</a>. Open source on <a style='display: block; text-align: center;' href="https://streamlit.io/" target="_blank">GitHub</a>.
+</p>
+</div>
+"""
+st.markdown(footer, unsafe_allow_html=True)
