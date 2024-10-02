@@ -5,7 +5,7 @@ from init import ChaZuo, KongTiao, YuE, electricity_fee
 from toml import load
 import os
 from streamlit_echarts import st_pyecharts
-from pyecharts.charts import Line
+from pyecharts.charts import Line, Grid
 from pyecharts import options as opts
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -127,6 +127,7 @@ def visualize_consumption_data(data, header, tr, current):
             chart_data = consumption_data["charge"].tolist().copy()
             chart_data = [f"{i:.6f}" for i in chart_data]
             # print(len(chart_data))
+            
             c = (
                 Line()
                 .add_xaxis(
@@ -155,7 +156,14 @@ def visualize_consumption_data(data, header, tr, current):
                     legend_opts=opts.LegendOpts(is_show=False),
                 )
             )
-            st_pyecharts(c, key=header)
+            grid = (
+                Grid()
+                .add(
+                    c,
+                    grid_opts=opts.GridOpts(pos_left="10%", pos_right="10%", pos_top="0%"),
+                )
+            )
+            st_pyecharts(grid, key=header)
         with col2:
             if len(consumption_data) > 1:
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
