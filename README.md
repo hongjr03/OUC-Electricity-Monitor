@@ -20,9 +20,9 @@
 type = "SQLite" # 数据库类型，支持 SQLite 和 MySQL
 
 [student]
-id = "your_student_id" # 学号，请务必填写
-proxy = false          # 如果需要代理，请设置为 true
-electricity_fee = 0.54 # 电费单价，单位为 RMB/度
+id = "your_student_id"    # 学号，请务必填写
+root_url = "your_root_url"# 如果有自己部署的 Tunnel 服务，可以填写，否则留空或删除该行
+electricity_fee = 0.54    # 电费单价，单位为 RMB/度
 
 [cron]
 interval = 5            # 定时任务执行间隔，单位为分钟，例如 5 表示每 5 分钟执行一次

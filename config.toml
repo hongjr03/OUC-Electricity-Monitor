@@ -8,7 +8,6 @@ yue_threshold = 10      # 校园卡余额阈值，单位为元
 
 [student]
 id = "your_student_id" # 学号，请务必填写
-proxy = false          # 如果需要代理，请设置为 true
 electricity_fee = 0.54 # 电费单价，单位为 RMB/度
 
 [cron]
@@ -27,8 +26,3 @@ database_name = "your_database_name"
 
 [database.SQLite] # SQLite 数据库配置，初始化后会替换成绝对路径
 file_path = "Electricity.db"
-
-[notify.bark] # Bark 配置，用于推送电量告警和充电提醒
-# https://bark.day.app/
-enabled = false
-device_token = "your_device_token"

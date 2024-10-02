@@ -8,12 +8,20 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
 
 try:
-    if config["student"]["proxy"] == "false":
+    if "root_url" not in config["student"] or config["student"]["root_url"] == "":
         root_url = "http://10.128.13.25"
     else:
-        root_url = "https://lsky.lmark.cc"
+        root_url = config["student"]["root_url"]
+        if root_url[-1] == "/":
+            root_url = root_url[:-1]
+        assert root_url.startswith("http")
+
 except Exception as e:
-    root_url = "https://lsky.lmark.cc"
+    print(e)
+    print(
+        "请重新设置 config.toml 中的 proxy 字段，以 http:// 或 https:// 开头，或者删除该字段并连接校园网。"
+    )
+    exit(1)
 
 db = None
 if config["database"]["type"].lower() == "sqlite":

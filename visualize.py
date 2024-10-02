@@ -94,9 +94,19 @@ def get_consumption(data, tr):
             consumption += data["charge"].iloc[i - 1] - data["charge"].iloc[i]
         else:
             consumption_time -= data["time"].iloc[i - 1] - data["time"].iloc[i]
-        consumption_data = pd.DataFrame(
-            {"time": data["time"], "charge": data["charge"].diff().fillna(0).abs()}
-        )
+    consumption_data = pd.DataFrame(
+        {"time": data["time"], "charge": data["charge"].diff().fillna(0).abs()}
+    )
+    # 整理 consumption_data，根据 2 倍的 interval 合并该时间段的电费
+    interval = config["cron"]["interval"] * 2
+    consumption_data = consumption_data.groupby(
+        pd.Grouper(key="time", freq=f"{interval}Min")
+    )
+    consumption_data = consumption_data.sum().reset_index()
+    # 只存非 0 的数据
+    consumption_data = consumption_data[consumption_data["charge"] > 0]
+    
+    
     # print(consumption_time)
     if consumption_time.total_seconds() > 0:
         consumption_rate = consumption / (consumption_time / timedelta(hours=1))
@@ -109,8 +119,9 @@ def get_consumption(data, tr):
 def visualize_consumption_data(data, header, tr, current):
     st.header(header)
     consumption_data, consumption_rate = get_consumption(data, tr)
+    # st.write(f"{consumption_data}, {data}")
     update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
-    if consumption_data is not None:
+    if consumption_data is not None and not consumption_data.empty:
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
         with col1:
             chart_data = consumption_data["charge"].tolist().copy()
@@ -174,7 +185,8 @@ def visualize_consumption_data(data, header, tr, current):
                         "还可以使用",
                         f"{available_time.seconds // 60} 分钟",
                     )
-    # NoneType' object has no attribute 'empty
+    elif not data.empty and consumption_data.empty:
+        st.write(f"{time_range}内设备没有消耗电量。")
     else:
         st.write("暂无电量数据，尝试获取最新数据...")
         fetch_data()

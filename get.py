@@ -9,12 +9,20 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
 
 try:
-    if config["student"]["proxy"] == "false":
+    if "root_url" not in config["student"] or config["student"]["root_url"] == "":
         root_url = "http://10.128.13.25"
     else:
-        root_url = "https://lsky.lmark.cc"
+        root_url = config["student"]["root_url"]
+        if root_url[-1] == "/":
+            root_url = root_url[:-1]
+        assert root_url.startswith("http")
+
 except Exception as e:
-    root_url = "https://lsky.lmark.cc"
+    print(e)
+    print(
+        "请重新设置 config.toml 中的 proxy 字段，以 http:// 或 https:// 开头，或者删除该字段并连接校园网。"
+    )
+    exit(1)
 
 
 def get_df(equipmentInfoId):
@@ -126,9 +134,13 @@ def get_latest_data():
 def notify(
     chazuo_info, kongtiao_info, yue_info, db_chazuo_info, db_kongtiao_info, db_yue_info
 ):
-    chazuo_threshold = config["notify"]["chazuo_threshold"]
-    kongtiao_threshold = config["notify"]["kongtiao_threshold"]
-    yue_threshold = config["notify"]["yue_threshold"]
+    try:
+        chazuo_threshold = config["notify"]["chazuo_threshold"]
+        kongtiao_threshold = config["notify"]["kongtiao_threshold"]
+        yue_threshold = config["notify"]["yue_threshold"]
+    except KeyError:
+        print("请检查 config.toml 文件中的 notify 字段是否正确配置。")
+        return
 
     try:
         from BarkNotificator import BarkNotificator
