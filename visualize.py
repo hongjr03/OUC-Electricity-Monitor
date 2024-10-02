@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-from init import ChaZuo, KongTiao, electricity_fee
+from init import ChaZuo, KongTiao, YuE, electricity_fee
 from toml import load
 import os
 from streamlit_echarts import st_pyecharts
@@ -71,6 +71,7 @@ def get_data(model, time_range):
 # 获取插座和空调数据
 chazuo_data, chazuo_tr = get_data(ChaZuo, time_range)
 kongtiao_data, kongtiao_tr = get_data(KongTiao, time_range)
+yue_data, yue_tr = get_data(YuE, time_range)
 
 
 def get_consumption(data, tr):
@@ -114,7 +115,7 @@ def visualize_consumption_data(data, header, tr, current):
                     consumption_data["time"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
                 )
                 .add_yaxis(
-                    series_name="电量",
+                    series_name="耗电量",
                     y_axis=chart_data,
                     is_smooth=True,
                     label_opts=opts.LabelOpts(is_show=False),
@@ -180,7 +181,9 @@ if not chazuo_data.empty and not kongtiao_data.empty:
     current_kongtiao = (
         kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
     )
-    chazuo_col, kongtiao_col, total_col = st.columns(3)
+    current_yue = yue_data["charge"].iloc[-1] if not yue_data.empty else 0
+    
+    chazuo_col, kongtiao_col, total_col, yue_col = st.columns(4)
     total_remaining = current_chazuo + current_kongtiao
 
     chazuo_col.metric("插座剩余", f"{current_chazuo:.2f}")
@@ -189,6 +192,7 @@ if not chazuo_data.empty and not kongtiao_data.empty:
         "相当于还有",
         f"¥{total_remaining * electricity_fee:.2f}",
     )
+    yue_col.metric("校园卡余额", f"¥{current_yue:.2f}")
 else:
     st.write("暂无完整的电量数据")
 

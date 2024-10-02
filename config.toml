@@ -4,6 +4,7 @@ type = "SQLite" # 数据库类型，支持 SQLite 和 MySQL
 [notify]
 chazuo_threshold = 10   # 插座电量阈值，单位为度
 kongtiao_threshold = 10 # 空调电量阈值，单位为度
+yue_threshold = 10      # 校园卡余额阈值，单位为元
 
 [student]
 id = "your_student_id" # 学号，请务必填写

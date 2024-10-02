@@ -44,6 +44,14 @@ class KongTiao(Model):
         database = db
 
 
+class YuE(Model):
+    balance = DecimalField()
+    time = DateTimeField()
+
+    class Meta:
+        database = db
+
+
 # 被 bash 调用，返回 crontab 的配置
 def get_crontab():
     # 如果有 crontab
@@ -94,7 +102,6 @@ if __name__ == "__main__":
         response_data = response.json()
 
         value = response_data["value"]
-
         # print("Value:", value)
         try:
             value_dict = eval(value)
@@ -103,6 +110,16 @@ if __name__ == "__main__":
             print(e)
             print("获取数据失败，请检查 config 配置并重新初始化。")
             exit(1)
+
+        card = value["card"]
+        try:
+            card_dict = eval(card)[0]
+            account = card_dict["account"]
+        except NameError as e:
+            print(e)
+            print("获取数据失败，请检查 config 配置并重新初始化。")
+            exit(1)
+
         eqptData = value_dict["eqptData"]
         eqptNum = len(eqptData)
 
@@ -138,12 +155,17 @@ if __name__ == "__main__":
         config["student"]["equipments"] = {}
         for i in range(eqptNum):
             categoryEnergyName = eqptData[i]["categoryEnergyName"]
-            if categoryEnergyName == "空调末端":
-                KongTiao.create_table()
-                categoryEnergyName = "kongtiao"
-            elif categoryEnergyName == "照明与插座":
-                ChaZuo.create_table()
-                categoryEnergyName = "chazuo"
+            try:
+                if categoryEnergyName == "空调末端":
+                    KongTiao.create_table()
+                    categoryEnergyName = "kongtiao"
+                elif categoryEnergyName == "照明与插座":
+                    ChaZuo.create_table()
+                    categoryEnergyName = "chazuo"
+            except Exception as e:
+                print(e)
+                print("创建数据库表失败，请检查 config 配置并重新初始化。")
+                exit(1)
             config["student"]["equipments"][categoryEnergyName] = {}
             config["student"]["equipments"][categoryEnergyName]["equipmentInfoId"] = (
                 eqptData[i]["equipmentInfoId"]
@@ -152,9 +174,24 @@ if __name__ == "__main__":
                 i
             ]["roomName"]
 
-        with open("config.toml", "w", encoding="utf-8") as f:
-            if "visualize" not in config or "title" not in config["visualize"]:
-                config["visualize"] = {}
-                config["visualize"]["title"] = "Electricity!"
-            get_crontab()
-            dump(config, f)
+    dz_payload = {"account": account}
+    response = requests.post(
+        "http://10.128.13.25/hydxcas/getDzByNo", headers=headers, json=dz_payload
+    )
+    if response.status_code == 200:
+        try:
+            config["student"]["account"] = account
+        except Exception as e:
+            print(e)
+            print("处理账户信息失败，请检查 config 配置并重新初始化。")
+            exit(1)
+    else:
+        print("获取账户信息失败，请检查网络连接或配置。")
+        exit(1)
+
+    with open("config.toml", "w", encoding="utf-8") as f:
+        if "visualize" not in config or "title" not in config["visualize"]:
+            config["visualize"] = {}
+            config["visualize"]["title"] = "Electricity!"
+        get_crontab()
+        dump(config, f)
