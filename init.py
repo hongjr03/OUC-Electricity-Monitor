@@ -195,6 +195,18 @@ if __name__ == "__main__":
         if "visualize" not in config or "title" not in config["visualize"]:
             config["visualize"] = {}
             config["visualize"]["title"] = "Electricity!"
+        if "notify" not in config:
+            config["notify"] = {}
+            config["notify"]["chazuo_threshold"] = 10
+            config["notify"]["kongtiao_threshold"] = 10
+            config["notify"]["yue_threshold"] = 10
+        else:
+            if "chazuo_threshold" not in config["notify"]:
+                config["notify"]["chazuo_threshold"] = 10
+            if "kongtiao_threshold" not in config["notify"]:
+                config["notify"]["kongtiao_threshold"] = 10
+            if "yue_threshold" not in config["notify"]:
+                config["notify"]["yue_threshold"] = 10
         get_crontab()
         dump(config, f)
 
