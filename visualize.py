@@ -153,7 +153,6 @@ def visualize_consumption_data(data, header, tr, current):
                 "data_time": data["time"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist(),
             }
             option = {
-                "title": {"text": header},
                 "xAxis": {"type": "time"},
                 "yAxis": {"type": "value", "scale": True},
                 "series": [
@@ -181,7 +180,7 @@ def visualize_consumption_data(data, header, tr, current):
                     "axisPointer": {"type": "cross"},
                 },
                 "dataZoom": [
-                    {"type": "inside", "xAxisIndex": [0], "start": 100-12.5, "end": 100}
+                    {"type": "inside", "xAxisIndex": [0], "start": 100-33, "end": 100}
                 ],
                 "legend": {
                     "selected": {"耗电量": False} if not on else {"电量": False},
