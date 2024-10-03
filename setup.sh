@@ -56,7 +56,7 @@ echo ""
 
 # 执行 get_cronjob() 函数，获得 crontab 时间表 ("*/5 * * * *")
 echo "Setting up crontab..."
-CRONTAB=$(python -c "from init import get_crontab; print(get_crontab())")
+CRONTAB=$(python -c "from utils import get_crontab; print(get_crontab())")
 CRONTAB_COMMAND="cd $(pwd) && .venv/bin/python get.py"
 echo "${CRONTAB} ${CRONTAB_COMMAND}"
 # 检查 crontab 是否已有该时间表，如果没有则添加
@@ -74,6 +74,9 @@ SCRIPT_PATH="$(pwd)/visualize.py"
 WORKING_DIR="$(pwd)"
 USER=$(whoami)
 
+HOST=$(python -c "from utils import get_visualize_host; print(get_visualize_host())")
+PORT=$(python -c "from utils import get_visualize_port; print(get_visualize_port())")
+
 # 创建 systemd 服务文件
 sudo bash -c "cat > ${SERVICE_FILE} <<EOF
 [Unit]
@@ -81,7 +84,7 @@ Description=Streamlit Service
 After=network.target
 
 [Service]
-ExecStart=${STREAMLIT_PATH} run ${SCRIPT_PATH}
+ExecStart=${STREAMLIT_PATH} run ${SCRIPT_PATH} --server.port ${PORT} --server.host ${HOST}
 WorkingDirectory=${WORKING_DIR}
 Restart=always
 User=${USER}
@@ -99,7 +102,7 @@ sudo systemctl start ${SERVICE_NAME}.service
 sudo systemctl enable ${SERVICE_NAME}.service
 
 echo "Streamlit service has been set up and started."
-echo "Enjoy your Streamlit app at http://localhost:8501"
+echo "Enjoy your Streamlit app at http://${HOST}:${PORT}."
 echo ""
 echo ""
 echo "Setup has been completed."
