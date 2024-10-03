@@ -29,7 +29,9 @@ interval = 5            # 定时任务执行间隔，单位为分钟，例如 5 
 crontab = "*/5 * * * *" # 定时任务执行时间，例如 "*/5 * * * *" 表示每 5 分钟执行一次
 
 [visualize]
-title = "Electricity!" # 可视化标题
+port = 8501            # 服务端口
+title = "Electricity!" # 网站标题
+icon = "⚡"             # 网站图标
 
 [database.MySQL] # MySQL 数据库配置
 host = "localhost"

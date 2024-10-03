@@ -74,7 +74,6 @@ SCRIPT_PATH="$(pwd)/visualize.py"
 WORKING_DIR="$(pwd)"
 USER=$(whoami)
 
-HOST=$(python -c "from utils import get_visualize_host; print(get_visualize_host())")
 PORT=$(python -c "from utils import get_visualize_port; print(get_visualize_port())")
 
 # 创建 systemd 服务文件
@@ -84,7 +83,7 @@ Description=Streamlit Service
 After=network.target
 
 [Service]
-ExecStart=${STREAMLIT_PATH} run ${SCRIPT_PATH} --server.address ${HOST} --server.port ${PORT}
+ExecStart=${STREAMLIT_PATH} run ${SCRIPT_PATH} --server.port ${PORT}
 WorkingDirectory=${WORKING_DIR}
 Restart=always
 User=${USER}

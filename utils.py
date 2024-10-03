@@ -35,10 +35,6 @@ def get_crontab():
         return f"*/5 * * * *"
 
 
-def get_visualize_host():
-    return config["visualize"]["host"] if "host" in config["visualize"] else "localhost"
-
-
 def get_visualize_port():
     return config["visualize"]["port"] if "port" in config["visualize"] else 8501
 
