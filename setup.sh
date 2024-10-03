@@ -101,9 +101,15 @@ sudo systemctl start ${SERVICE_NAME}.service
 sudo systemctl enable ${SERVICE_NAME}.service
 
 echo "Streamlit service has been set up and started."
-echo "Enjoy your Streamlit app at http://${HOST}:${PORT}."
 echo ""
 echo ""
-echo "Setup has been completed."
-echo "To check the status of the Streamlit service, run 'sudo systemctl status streamlit.service'."
-echo "To stop the Streamlit service, run 'sudo systemctl stop streamlit.service'."
+echo "All done!"
+echo "你可以通过以下命令查看 Streamlit 服务的状态："
+echo "sudo systemctl status streamlit.service | 查看服务状态"
+
+echo "你可以通过以下命令重启 Streamlit 服务："
+echo "sudo systemctl restart streamlit.service | 重启服务"
+
+echo "你可以通过以下命令卸载 Streamlit 服务："
+echo "sudo systemctl stop streamlit.service | 停止服务"
+echo "sudo systemctl disable streamlit.service | 禁用服务"
