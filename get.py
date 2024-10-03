@@ -196,14 +196,18 @@ if __name__ == "__main__":
         kongtiao_info = data["kongtiao"]
     yue_info = data["yue"]
 
-    if config["notify"]["bark"]["enabled"]:
-        notify(
-            chazuo_info,
-            kongtiao_info,
-            yue_info,
-            db_chazuo_info,
-            db_kongtiao_info,
-            db_yue_info,
-        )
+    try:
+        if config["notify"]["bark"]["enabled"]:
+            notify(
+                chazuo_info,
+                kongtiao_info,
+                yue_info,
+                db_chazuo_info,
+                db_kongtiao_info,
+                db_yue_info,
+            )
+    # 如果没有配置 bark，则不发送通知
+    except KeyError:
+        pass
 
     # 返回值
