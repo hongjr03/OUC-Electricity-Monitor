@@ -84,7 +84,7 @@ Description=Streamlit Service
 After=network.target
 
 [Service]
-ExecStart=${STREAMLIT_PATH} run ${SCRIPT_PATH} --server.port ${PORT} --server.host ${HOST}
+ExecStart=${STREAMLIT_PATH} run ${SCRIPT_PATH} --server.address ${HOST} --server.port ${PORT}
 WorkingDirectory=${WORKING_DIR}
 Restart=always
 User=${USER}
