@@ -59,8 +59,8 @@ echo "Setting up crontab..."
 CRONTAB=$(python -c "from init import get_crontab; print(get_crontab())")
 CRONTAB_COMMAND="cd $(pwd) && .venv/bin/python get.py"
 echo "${CRONTAB} ${CRONTAB_COMMAND}"
-# 将 crontab 时间表写入文件
-(crontab -l 2>/dev/null; echo "${CRONTAB} ${CRONTAB_COMMAND}") | crontab -
+# 检查 crontab 是否已有该时间表，如果没有则添加
+(crontab -l 2>/dev/null; echo "${CRONTAB} ${CRONTAB_COMMAND}") | sort - | uniq - | crontab -
 echo "Crontab has been set up."
 echo ""
 echo ""

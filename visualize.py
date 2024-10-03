@@ -4,12 +4,18 @@ from datetime import datetime, timedelta
 from init import ChaZuo, KongTiao, YuE, electricity_fee
 from toml import load
 import os
-from streamlit_echarts import st_pyecharts
+from streamlit_echarts import st_echarts
 from pyecharts.charts import Line, Grid
 from pyecharts import options as opts
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
+
+st.set_page_config(
+    page_title=config["visualize"]["title"],
+    page_icon="⚡",
+)
+
 if "visualize" not in config or "title" not in config["visualize"]:
     st.error("请先运行 init.py 文件")
     st.stop()
@@ -95,7 +101,10 @@ def get_consumption(data, tr):
         else:
             consumption_time -= data["time"].iloc[i - 1] - data["time"].iloc[i]
     consumption_data = pd.DataFrame(
-        {"time": data["time"], "charge": data["charge"].diff().fillna(0).abs()}
+        {
+            "time": data["time"],
+            "charge": data["charge"].diff().fillna(0).abs(),
+        }
     )
     # 整理 consumption_data，根据 2 倍的 interval 合并该时间段的电费
     interval = config["cron"]["interval"] * 2
@@ -105,65 +114,81 @@ def get_consumption(data, tr):
     consumption_data = consumption_data.sum().reset_index()
     # 只存非 0 的数据
     consumption_data = consumption_data[consumption_data["charge"] > 0]
-    
-    
+    # 使用 charge / 时间差 计算消耗率
+    consumption_data_rate = consumption_data.copy()
+    tmp_time = consumption_data_rate["time"].diff().dt.total_seconds() / 60
+    consumption_data_rate["charge"] = consumption_data_rate["charge"] / tmp_time * interval
+    consumption_data_rate = consumption_data_rate.fillna(0)
+    consumption_data_rate = consumption_data_rate[consumption_data_rate["charge"] > 0]
+    # print(consumption_data_rate)
+
     # print(consumption_time)
     if consumption_time.total_seconds() > 0:
         consumption_rate = consumption / (consumption_time / timedelta(hours=1))
     else:
         consumption_rate = 0
 
-    return consumption_data, consumption_rate
+    return consumption_data_rate, consumption_rate
 
 
 def visualize_consumption_data(data, header, tr, current):
-    st.header(header)
     consumption_data, consumption_rate = get_consumption(data, tr)
-    # st.write(f"{consumption_data}, {data}")
-    update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
+
     if consumption_data is not None and not consumption_data.empty:
+        header_col, toggle_col = st.columns([3, 1])
+        with header_col:
+            st.header(header)
+            update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
+        with toggle_col:
+            on = st.toggle("显示变化量", key=header + "_toggle")
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
+
         with col1:
-            chart_data = consumption_data["charge"].tolist().copy()
-            chart_data = [f"{i:.6f}" for i in chart_data]
-            # print(len(chart_data))
-            
-            c = (
-                Line()
-                .add_xaxis(
-                    consumption_data["time"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
-                )
-                .add_yaxis(
-                    series_name="耗电量",
-                    y_axis=chart_data,
-                    is_smooth=True,
-                    label_opts=opts.LabelOpts(is_show=False),
-                )
-                .set_global_opts(
-                    xaxis_opts=opts.AxisOpts(type_="category", is_scale=True),
-                    yaxis_opts=opts.AxisOpts(type_="value"),
-                    datazoom_opts=[
-                        opts.DataZoomOpts(
-                            type_="inside",
-                            xaxis_index=0,
-                            range_start=40,  # 初始化滑动窗口在最末尾
-                            range_end=100,
-                        )
-                    ],
-                    tooltip_opts=opts.TooltipOpts(
-                        trigger="axis", axis_pointer_type="cross"
-                    ),
-                    legend_opts=opts.LegendOpts(is_show=False),
-                )
-            )
-            grid = (
-                Grid()
-                .add(
-                    c,
-                    grid_opts=opts.GridOpts(pos_left="10%", pos_right="10%", pos_top="0%"),
-                )
-            )
-            st_pyecharts(grid, key=header)
+            chart_data = {
+                "consumption": consumption_data["charge"].tolist().copy(),
+                "data": data["charge"].tolist().copy(),
+                "consumption_time": consumption_data["time"]
+                .dt.strftime("%Y-%m-%d %H:%M:%S")
+                .tolist(),
+                "data_time": data["time"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist(),
+            }
+            option = {
+                "title": {"text": header},
+                "xAxis": {"type": "time"},
+                "yAxis": {"type": "value", "scale": True},
+                "series": [
+                    {
+                        "data": list(zip(chart_data["data_time"], chart_data["data"])),
+                        "type": "line",
+                        "name": "电量",
+                        "smooth": True,
+                        "tooltip": {
+                            "show": True,
+                        }
+                    },
+                    {
+                        "data": list(zip(chart_data["consumption_time"], chart_data["consumption"])),
+                        "type": "line",
+                        "name": "耗电量",
+                        "smooth": True,
+                        "tooltip": {
+                            "show": True,
+                        }
+                    },
+                ],
+                "tooltip": {
+                    "trigger": "axis",
+                    "axisPointer": {"type": "cross"},
+                },
+                "dataZoom": [
+                    {"type": "inside", "xAxisIndex": [0], "start": 100-12.5, "end": 100}
+                ],
+                "legend": {
+                    "selected": {"耗电量": False} if not on else {"电量": False},
+                    "show": False,
+                },
+            }
+            st_echarts(option, key=header + "_chart")
         with col2:
             if len(consumption_data) > 1:
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
@@ -193,15 +218,22 @@ def visualize_consumption_data(data, header, tr, current):
                         "还可以使用",
                         f"{available_time.seconds // 60} 分钟",
                     )
-    elif not data.empty and consumption_data.empty:
+
+    elif not data.empty:
+        st.header(header)
+        update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
         st.write(f"{time_range}内设备没有消耗电量。")
+
     else:
         st.write("暂无电量数据，尝试获取最新数据...")
         fetch_data()
 
+    #     st.write("暂无电量数据，尝试获取最新数据...")
+    #     fetch_data()
 
-# 总剩余电量
-st.header("总剩余电量")
+
+# 总剩余
+st.header("总剩余")
 
 if not chazuo_data.empty and not kongtiao_data.empty:
     current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
