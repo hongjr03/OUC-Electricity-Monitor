@@ -89,7 +89,7 @@ def visualize_consumption_data(data, header, tr, current):
     consumption_data, consumption_rate = get_consumption(data, tr)
 
     if consumption_data is not None and not consumption_data.empty:
-        header_col, toggle_col = st.columns([3, 1])
+        header_col, toggle_col = st.columns([3, 1], vertical_alignment="bottom")
         with header_col:
             st.header(header)
             update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
