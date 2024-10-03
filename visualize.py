@@ -1,19 +1,20 @@
 import streamlit as st
-import pandas as pd
 from datetime import datetime, timedelta
-from init import ChaZuo, KongTiao, YuE, electricity_fee
 from toml import load
 import os
 from streamlit_echarts import st_echarts
-from pyecharts.charts import Line, Grid
-from pyecharts import options as opts
+
+from models import ChaZuo, KongTiao, YuE
+from utils import get_consumption, get_data
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
 
+electricity_fee = config["student"]["electricity_fee"]
+
 st.set_page_config(
     page_title=config["visualize"]["title"],
-    page_icon="⚡",
+    page_icon=config["visualize"]["icon"],
 )
 
 if "visualize" not in config or "title" not in config["visualize"]:
@@ -54,81 +55,34 @@ def fetch_data():
 if col2.button("获取最新数据"):
     fetch_data()
 
-
-# 根据选择的时间范围获取数据
-def get_data(model, time_range, is_YuE=False):
-    if time_range == "最近 24 小时":
-        start_time = datetime.now() - timedelta(hours=24)
-    elif time_range == "最近 7 天":
-        start_time = datetime.now() - timedelta(days=7)
-    elif time_range == "最近 30 天":
-        start_time = datetime.now() - timedelta(days=30)
-    else:
-        start_time = datetime.min
-
-    query = model.select().where(model.time >= start_time).order_by(model.time)
-    df = pd.DataFrame(list(query.dicts()))
-
-    if not is_YuE:
-        # 将 'charge' 列转换为 float 类型
-        if "charge" in df.columns:
-            df["charge"] = df["charge"].astype(float)
-    else:
-        if "balance" in df.columns:
-            df["balance"] = df["balance"].astype(float)
-
-    real_time_range = df["time"].max() - df["time"].min()
-    return df, real_time_range
-
-
 # 获取插座和空调数据
 chazuo_data, chazuo_tr = get_data(ChaZuo, time_range)
 kongtiao_data, kongtiao_tr = get_data(KongTiao, time_range)
 yue_data, yue_tr = get_data(YuE, time_range, is_YuE=True)
 
 
-def get_consumption(data, tr):
-    # print(tr)
-    consumption_data = None
-    consumption_time = tr
+# 总剩余
+st.header("总剩余")
 
-    # 计算相邻两个数据点的差值
-    consumption = 0
-    for i in range(1, len(data)):
-        # print(data["charge"].iloc[i], data["charge"].iloc[i - 1])
-        if data["charge"].iloc[i] < data["charge"].iloc[i - 1]:
-            consumption += data["charge"].iloc[i - 1] - data["charge"].iloc[i]
-        else:
-            consumption_time -= data["time"].iloc[i - 1] - data["time"].iloc[i]
-    consumption_data = pd.DataFrame(
-        {
-            "time": data["time"],
-            "charge": data["charge"].diff().fillna(0).abs(),
-        }
+if not chazuo_data.empty and not kongtiao_data.empty:
+    current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
+    current_kongtiao = (
+        kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
     )
-    # 整理 consumption_data，根据 2 倍的 interval 合并该时间段的电费
-    interval = config["cron"]["interval"] * 2
-    consumption_data = consumption_data.groupby(
-        pd.Grouper(key="time", freq=f"{interval}Min")
+    current_yue = yue_data["balance"].iloc[-1] if not yue_data.empty else 0
+
+    chazuo_col, kongtiao_col, total_col, yue_col = st.columns(4)
+    total_remaining = current_chazuo + current_kongtiao
+
+    chazuo_col.metric("插座剩余", f"{current_chazuo:.2f}")
+    kongtiao_col.metric("空调剩余", f"{current_kongtiao:.2f}")
+    total_col.metric(
+        "相当于还有",
+        f"¥{total_remaining * electricity_fee:.2f}",
     )
-    consumption_data = consumption_data.sum().reset_index()
-    # 只存非 0 的数据
-    consumption_data = consumption_data[consumption_data["charge"] > 0]
-    # 使用 charge / 时间差 计算消耗率
-    consumption_data_rate = consumption_data.copy()
-    tmp_time = consumption_data_rate["time"].diff().dt.total_seconds() / 60
-    consumption_data_rate["charge"] = consumption_data_rate["charge"] / tmp_time * interval
-    consumption_data_rate = consumption_data_rate.fillna(0)
-    consumption_data_rate = consumption_data_rate[consumption_data_rate["charge"] > 0]
-    # print(consumption_data_rate)
-
-    # print(consumption_time)
-    if consumption_time.total_seconds() > 0:
-        consumption_rate = consumption / (consumption_time / timedelta(hours=1))
-    else:
-        consumption_rate = 0
-
-    return consumption_data_rate, consumption_rate
+    yue_col.metric("校园卡余额", f"¥{current_yue:.2f}")
+else:
+    st.write("暂无完整的电量数据")
 
 
 def visualize_consumption_data(data, header, tr, current):
@@ -163,16 +117,21 @@ def visualize_consumption_data(data, header, tr, current):
                         "smooth": True,
                         "tooltip": {
                             "show": True,
-                        }
+                        },
                     },
                     {
-                        "data": list(zip(chart_data["consumption_time"], chart_data["consumption"])),
+                        "data": list(
+                            zip(
+                                chart_data["consumption_time"],
+                                chart_data["consumption"],
+                            )
+                        ),
                         "type": "line",
                         "name": "耗电量",
                         "smooth": True,
                         "tooltip": {
                             "show": True,
-                        }
+                        },
                     },
                 ],
                 "tooltip": {
@@ -180,7 +139,7 @@ def visualize_consumption_data(data, header, tr, current):
                     "axisPointer": {"type": "cross"},
                 },
                 "dataZoom": [
-                    {"type": "inside", "xAxisIndex": [0], "start": 100-33, "end": 100}
+                    {"type": "inside", "xAxisIndex": [0], "start": 100 - 33, "end": 100}
                 ],
                 "legend": {
                     "selected": {"耗电量": False} if not on else {"电量": False},
@@ -195,11 +154,9 @@ def visualize_consumption_data(data, header, tr, current):
                     "相当于每天交",
                     f"¥{consumption_rate * 24 * electricity_fee:.2f}",
                 )
-                # current / consumption_rate 转换成 时间
                 available_time = current / consumption_rate
                 try:
                     available_time = timedelta(hours=available_time)
-                # OverflowError: cannot convert float infinity to integer
                 except OverflowError:
                     available_time = timedelta(days=0)
                 if available_time.days > 0:
@@ -226,33 +183,6 @@ def visualize_consumption_data(data, header, tr, current):
     else:
         st.write("暂无电量数据，尝试获取最新数据...")
         fetch_data()
-
-    #     st.write("暂无电量数据，尝试获取最新数据...")
-    #     fetch_data()
-
-
-# 总剩余
-st.header("总剩余")
-
-if not chazuo_data.empty and not kongtiao_data.empty:
-    current_chazuo = chazuo_data["charge"].iloc[-1] if not chazuo_data.empty else 0
-    current_kongtiao = (
-        kongtiao_data["charge"].iloc[-1] if not kongtiao_data.empty else 0
-    )
-    current_yue = yue_data["balance"].iloc[-1] if not yue_data.empty else 0
-
-    chazuo_col, kongtiao_col, total_col, yue_col = st.columns(4)
-    total_remaining = current_chazuo + current_kongtiao
-
-    chazuo_col.metric("插座剩余", f"{current_chazuo:.2f}")
-    kongtiao_col.metric("空调剩余", f"{current_kongtiao:.2f}")
-    total_col.metric(
-        "相当于还有",
-        f"¥{total_remaining * electricity_fee:.2f}",
-    )
-    yue_col.metric("校园卡余额", f"¥{current_yue:.2f}")
-else:
-    st.write("暂无完整的电量数据")
 
 
 visualize_consumption_data(chazuo_data, "插座", chazuo_tr, current_chazuo)

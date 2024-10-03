@@ -1,8 +1,10 @@
 from peewee import *
-import datetime
-import time, os
+import os
 from toml import dump, load
 import requests
+
+from models import ChaZuo, KongTiao, YuE
+from utils import get_crontab
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = load(script_dir + "/config.toml")
@@ -23,76 +25,8 @@ except Exception as e:
     )
     exit(1)
 
-db = None
-if config["database"]["type"].lower() == "sqlite":
-    # if the file exists, change to its absolute path
-    if os.path.exists(config["database"]["SQLite"]["file_path"]):
-        config["database"]["SQLite"]["file_path"] = os.path.abspath(
-            config["database"]["SQLite"]["file_path"]
-        )
-    db = SqliteDatabase(config["database"]["SQLite"]["file_path"])
-elif config["database"]["type"].lower() == "mysql":
-    db = MySQLDatabase(
-        config["database"]["MySQL"]["database_name"],
-        user=config["database"]["MySQL"]["user"],
-        password=config["database"]["MySQL"]["password"],
-        host=config["database"]["MySQL"]["host"],
-        port=config["database"]["MySQL"]["port"],
-    )
 
 electricity_fee = config["student"]["electricity_fee"]
-
-
-class ChaZuo(Model):
-    charge = DecimalField()
-    time = DateTimeField()
-
-    class Meta:
-        database = db
-
-
-class KongTiao(Model):
-    charge = DecimalField()
-    time = DateTimeField()
-
-    class Meta:
-        database = db
-
-
-class YuE(Model):
-    balance = DecimalField()
-    time = DateTimeField()
-
-    class Meta:
-        database = db
-
-
-# 被 bash 调用，返回 crontab 的配置
-def get_crontab():
-    # 如果有 crontab
-    if "crontab" in config["cron"]:
-        # check crontab
-        import re
-
-        if re.match(r"^\*\/[1-9]\d* \* \* \* \*$", config["cron"]["crontab"]):
-            return config["cron"]["crontab"]
-        else:
-            config["cron"]["crontab"] = f"*/5 * * * *"
-            return f"*/5 * * * *"
-    elif "interval" in config["cron"]:
-        config["cron"]["interval"] = int(config["cron"]["interval"])
-        if config["cron"]["interval"] < 1:
-            config["cron"]["crontab"] = f"*/1 * * * *"
-            return f"*/1 * * * *"
-        elif config["cron"]["interval"] > 59:
-            config["cron"]["crontab"] = f"*/59 * * * *"
-            return f"*/59 * * * *"
-        else:
-            config["cron"]["crontab"] = f"*/{config['cron']['interval']} * * * *"
-            return f"*/{config['cron']['interval']} * * * *"
-    else:
-        config["cron"]["crontab"] = f"*/5 * * * *"
-        return f"*/5 * * * *"
 
 
 if __name__ == "__main__":
