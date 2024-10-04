@@ -92,7 +92,7 @@ def visualize_consumption_data(data, header, tr, current):
         header_col, toggle_col = st.columns([3, 1], vertical_alignment="bottom")
         with header_col:
             st.header(header)
-            update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
+            update_time.write(f"最后更新时间：{data['time'].iloc[-1].strftime('%Y-%m-%d %H:%M:%S')}")
         with toggle_col:
             on = st.toggle("显示变化量", key=header + "_toggle")
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
@@ -177,7 +177,7 @@ def visualize_consumption_data(data, header, tr, current):
 
     elif not data.empty:
         st.header(header)
-        update_time.write(f"最后更新时间：{data['time'].iloc[-1]}")
+        update_time.write(f"最后更新时间：{data['time'].iloc[-1].strftime('%Y-%m-%d %H:%M:%S')}")
         st.write(f"{time_range}内设备没有消耗电量。")
 
     else:
