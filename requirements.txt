@@ -1,5 +1,9 @@
+# barknotificator==0.2.0
+pandas==2.2.2
 peewee==3.17.6
+requests==2.32.3
 streamlit==1.38.0
-streamlit_echarts==0.4.0
+streamlit-echarts==0.4.0
 toml==0.10.2
-pymysql
+# pymysql
+# cryptography

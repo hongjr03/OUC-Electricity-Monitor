@@ -53,9 +53,24 @@ device_token = "your_device_token"
 
 ![Bark 通知](assets/bark.png)
 
-### 对 Ubuntu 用户
+### 自动安装
 
-项目提供了一个 setup.sh 脚本，可以自动安装依赖并配置定时任务、部署服务。请确保已经编辑好了配置文件，然后运行以下命令：
+> [!WARNING]
+> 仅支持 Ubuntu + bash。
+
+项目提供了一个 setup.sh 脚本，可以自动安装依赖并配置定时任务、部署服务。请确保已经编辑好了配置文件，然后确认以下几点：
+
+- 请确保已经配置好 config.toml 文件。
+- 请确保已经安装了 crontab。
+
+    ```bash
+    sudo apt install cron
+    ```
+
+- 如需使用 Bark 推送，请取消 requirements.txt 中的注释。
+- 如果使用 MySQL 数据库，请取消 requirements.txt 中的注释。
+
+然后，运行以下命令：
 
 ```bash
 chmod +x setup.sh
@@ -83,7 +98,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-接着，根据 `requirements.txt` 安装依赖：
+接着，根据 `requirements.txt` 安装依赖，关于 requirements.txt 的说明同自动安装脚本，请根据需要取消注释。
 
 ```bash
 pip install -r requirements.txt
@@ -113,4 +128,4 @@ streamlit run visualize.py
 
 - 请勿将配置文件上传至公开仓库，其中包含了个人信息。
 - 请勿频繁请求电费数据，以免对校园网造成影响。
-- 对于电量的平均消耗计算依赖于定时任务的执行频率，如果定时任务执行频率不稳定，可能会导致电量的平均消耗不准确。计算时，只针对电量减少的情况进行计算，不考虑电量增加或不变的情况。因此每日电费估计**一定**是一个**偏大**的值，仅供参考。
+- 对于电量的平均消耗计算仅供参考，在可视化页面选取较长的时间范围**可能**可以获取更准确的预测值。
