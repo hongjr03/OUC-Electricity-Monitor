@@ -1,6 +1,8 @@
 # OUC Electricity Monitor
 
-一个监控电费变化的工具，实现了电量余量监控、可视化和通知。原始实现源于 [白佬](https://github.com/3401797899)。
+[![Demo](https://img.shields.io/badge/Online-DEMO-blue.svg)](https://dorm.jrhim.com/)
+
+一个监控电费变化的工具，实现了电量余量监控、可视化和通知。原始实现源于[白佬](https://github.com/3401797899)。
 
 ## 预览
 
