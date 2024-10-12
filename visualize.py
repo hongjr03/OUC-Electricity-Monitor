@@ -106,9 +106,38 @@ def visualize_consumption_data(data, header, tr, current):
                     go.Scatter(
                         x=consumption_data["time"],
                         y=consumption_data["charge"],
-                        mode="lines",
+                        mode="lines+markers",
                         name="耗电量",
                         line=dict(shape="spline"),
+                    )
+                )
+                # 标注最值
+                max_charge = consumption_data["charge"].max()
+                min_charge = consumption_data["charge"].min()
+                max_time = consumption_data[consumption_data["charge"] == max_charge]["time"].iloc[0]
+                min_time = consumption_data[consumption_data["charge"] == min_charge]["time"].iloc[0]
+                fig.add_trace(
+                    go.Scatter(
+                        x=[max_time],
+                        y=[max_charge],
+                        mode="markers+text",
+                        name="最大值",
+                        text=[f"最大值：{max_charge:.2f}"],
+                        textposition="top center",
+                        marker=dict(color="red", size=10),
+                        showlegend=False,
+                    )
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=[min_time],
+                        y=[min_charge],
+                        mode="markers+text",
+                        name="最小值",
+                        text=[f"最小值：{min_charge:.2f}"],
+                        textposition="bottom center",
+                        marker=dict(color="blue", size=10),
+                        showlegend=False,
                     )
                 )
             else:
@@ -116,9 +145,38 @@ def visualize_consumption_data(data, header, tr, current):
                     go.Scatter(
                         x=data["time"],
                         y=data["charge"],
-                        mode="lines",
+                        mode="lines+markers",
                         name="电量",
                         line=dict(shape="spline"),
+                    )
+                )
+                # 标注最值
+                max_charge = data["charge"].max()
+                min_charge = data["charge"].min()
+                max_time = data[data["charge"] == max_charge]["time"].iloc[0]
+                min_time = data[data["charge"] == min_charge]["time"].iloc[0]
+                fig.add_trace(
+                    go.Scatter(
+                        x=[max_time],
+                        y=[max_charge],
+                        mode="markers+text",
+                        name="最大值",
+                        text=[f"最大值：{max_charge:.2f}"],
+                        textposition="top center",
+                        marker=dict(color="red", size=10),
+                        showlegend=False,
+                    )
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=[min_time],
+                        y=[min_charge],
+                        mode="markers+text",
+                        name="最小值",
+                        text=[f"最小值：{min_charge:.2f}"],
+                        textposition="bottom center",
+                        marker=dict(color="blue", size=10),
+                        showlegend=False,
                     )
                 )
 
@@ -127,6 +185,10 @@ def visualize_consumption_data(data, header, tr, current):
                 yaxis_title="电量" if not on else "耗电量",
                 legend_title="图例",
                 hovermode="x unified",
+                showlegend=False,
+                margin=dict(t=0),  # 去除画面上方空白
+                # 设置高度
+                height=400,
             )
 
             st.plotly_chart(fig, use_container_width=True)
