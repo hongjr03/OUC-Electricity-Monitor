@@ -67,7 +67,7 @@ def get_data(model, time_range, is_YuE=False):
 
 def get_consumption(data, tr):
     # print(tr)
-    consumption_data = None
+    consumption_data: pd.DataFrame = pd.DataFrame()
     consumption_time = tr
 
     # 计算相邻两个数据点的差值
@@ -76,16 +76,26 @@ def get_consumption(data, tr):
         # print(data["charge"].iloc[i], data["charge"].iloc[i - 1])
         if data["charge"].iloc[i] < data["charge"].iloc[i - 1]:
             consumption += data["charge"].iloc[i - 1] - data["charge"].iloc[i]
+            consumption_data = pd.concat(
+                [
+                    consumption_data,
+                    pd.DataFrame(
+                        {
+                            "time": [data["time"].iloc[i - 1]],
+                            "charge": [
+                                data["charge"].iloc[i - 1] - data["charge"].iloc[i]
+                            ],
+                        }
+                    ),
+                ]
+            )
         else:
             consumption_time -= data["time"].iloc[i - 1] - data["time"].iloc[i]
-    consumption_data = pd.DataFrame(
-        {
-            "time": data["time"],
-            "charge": data["charge"].diff().fillna(0).abs(),
-        }
-    )
+
     # 整理 consumption_data，根据 2 倍的 interval 合并该时间段的电费
     interval = config["cron"]["interval"] * 2
+    if consumption_data.empty:
+        return None, 0
     consumption_data = consumption_data.groupby(
         pd.Grouper(key="time", freq=f"{interval}Min")
     )
@@ -100,7 +110,9 @@ def get_consumption(data, tr):
     )
     consumption_data_rate = consumption_data_rate.fillna(0)
     consumption_data_rate = consumption_data_rate[consumption_data_rate["charge"] > 0]
+    # print(consumption_data_rate)
 
+    # print(consumption_time)
     if consumption_time.total_seconds() > 0:
         consumption_rate = consumption / (consumption_time / timedelta(hours=1))
     else:
