@@ -2,7 +2,6 @@ import streamlit as st
 from datetime import datetime, timedelta
 from toml import load
 import os
-from streamlit_echarts import st_echarts
 
 from models import ChaZuo, KongTiao, YuE
 from utils import get_consumption, get_data
@@ -98,55 +97,39 @@ def visualize_consumption_data(data, header, tr, current):
         col1, col2 = st.columns([3, 1])  # 3:1 的宽度比例
 
         with col1:
-            chart_data = {
-                "consumption": consumption_data["charge"].tolist().copy(),
-                "data": data["charge"].tolist().copy(),
-                "consumption_time": consumption_data["time"]
-                .dt.strftime("%Y-%m-%d %H:%M:%S")
-                .tolist(),
-                "data_time": data["time"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist(),
-            }
-            option = {
-                "xAxis": {"type": "time"},
-                "yAxis": {"type": "value", "scale": True},
-                "series": [
-                    {
-                        "data": list(zip(chart_data["data_time"], chart_data["data"])),
-                        "type": "line",
-                        "name": "电量",
-                        "smooth": True,
-                        "tooltip": {
-                            "show": True,
-                        },
-                    },
-                    {
-                        "data": list(
-                            zip(
-                                chart_data["consumption_time"],
-                                chart_data["consumption"],
-                            )
-                        ),
-                        "type": "line",
-                        "name": "耗电量",
-                        "smooth": True,
-                        "tooltip": {
-                            "show": True,
-                        },
-                    },
-                ],
-                "tooltip": {
-                    "trigger": "axis",
-                    "axisPointer": {"type": "cross"},
-                },
-                "dataZoom": [
-                    {"type": "inside", "xAxisIndex": [0], "start": 100 - 33, "end": 100}
-                ],
-                "legend": {
-                    "selected": {"耗电量": False} if not on else {"电量": False},
-                    "show": False,
-                },
-            }
-            st_echarts(option, key=header + "_chart")
+            import plotly.graph_objects as go
+
+            fig = go.Figure()
+
+            if on:
+                fig.add_trace(
+                    go.Scatter(
+                        x=consumption_data["time"],
+                        y=consumption_data["charge"],
+                        mode="lines",
+                        name="耗电量",
+                        line=dict(shape="spline"),
+                    )
+                )
+            else:
+                fig.add_trace(
+                    go.Scatter(
+                        x=data["time"],
+                        y=data["charge"],
+                        mode="lines",
+                        name="电量",
+                        line=dict(shape="spline"),
+                    )
+                )
+
+            fig.update_layout(
+                xaxis_title="时间",
+                yaxis_title="电量" if not on else "耗电量",
+                legend_title="图例",
+                hovermode="x unified",
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
         with col2:
             if len(consumption_data) > 1:
                 st.metric("每小时平均消耗", f"{consumption_rate:.2f}")
@@ -184,6 +167,8 @@ def visualize_consumption_data(data, header, tr, current):
         st.write("暂无电量数据，尝试获取最新数据...")
         fetch_data()
 
+    #     st.write("暂无电量数据，尝试获取最新数据...")
+    #     fetch_data()
 
 visualize_consumption_data(chazuo_data, "插座", chazuo_tr, current_chazuo)
 visualize_consumption_data(kongtiao_data, "空调", kongtiao_tr, current_kongtiao)
