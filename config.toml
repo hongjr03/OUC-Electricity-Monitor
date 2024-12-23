@@ -6,6 +6,13 @@ chazuo_threshold = 10   # 插座电量阈值，单位为度
 kongtiao_threshold = 10 # 空调电量阈值，单位为度
 yue_threshold = 10      # 校园卡余额阈值，单位为元
 
+[notify.email]
+smtp_server = "smtp.163.com"
+smtp_port = 465
+from_email = "##@163.com"
+to_email = ["##@163.com", "##@qq.com", "##@qq.com", "##@qq.com", "##@qq.com"]
+email_password = "###"
+
 [student]
 id = "your_student_id" # 学号，请务必填写
 electricity_fee = 0.54 # 电费单价，单位为 RMB/度

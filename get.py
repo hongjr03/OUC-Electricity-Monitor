@@ -148,34 +148,80 @@ def notify(
         bark = BarkNotificator(device_token=config["notify"]["bark"]["device_token"])
     except ImportError:
         print("未安装 BarkNotificator，请执行 `pip install BarkNotificator` 安装。")
-        return
+        bark = None
 
+    # 检查是否配置邮件发送
+    email_config = config["notify"].get("email", {})
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.header import Header
+
+    def send_email(subject, content):
+        try:
+            smtp_server = email_config["smtp_server"]
+            smtp_port = email_config.get("smtp_port", 465)  # 默认使用 465 端口（SSL）
+            from_email = email_config["from_email"]
+            to_emails = email_config["to_email"]  # 支持多个收件人
+            email_password = email_config["email_password"]  # 授权码而非密码
+
+            # 构建邮件内容
+            message = MIMEText(content, "plain", "utf-8")
+            message["From"] = Header(from_email)
+            message["To"] = Header(", ".join(to_emails), "utf-8")  # 发送给多个收件人
+            message["Subject"] = Header(subject, "utf-8")
+            print(smtp_server, smtp_port, from_email, to_emails, email_password, subject, content)
+            # 使用 SMTP_SSL 连接（直接使用 SSL）
+            with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+                server.login(from_email, email_password)  # 使用授权码登录
+                server.sendmail(from_email, to_emails, message.as_string())  # 向多个收件人发送邮件
+
+            print("邮件发送成功")
+        except Exception as e:
+            print(f"发送邮件失败: {e}")
+
+    def notify_all(title, content):
+        if bark:
+            bark.send(title=title, content=content)
+        if email_config:
+            send_email(subject=title, content=content)
+
+    # 插座电量不足
     if chazuo_info < chazuo_threshold:
-        bark.send(
+        notify_all(
             title="插座电量不足",
             content=f"剩余 {chazuo_info:.2f} 度，请及时充电费！",
         )
+    # 空调电量不足
     if kongtiao_info < kongtiao_threshold:
-        bark.send(
+        notify_all(
             title="空调电量不足",
             content=f"剩余 {kongtiao_info:.2f} 度，请及时充电费！",
         )
-    if yue_info < yue_threshold:
-        bark.send(
+    # 校园卡余额不足
+    if float(yue_info) < yue_threshold:
+        notify_all(
             title="校园卡余额不足",
             content=f"剩余 {yue_info:.2f} 元，请及时充值！",
         )
 
+    # 插座充值通知
     if chazuo_info - db_chazuo_info > 0:
-        bark.send(title="插座", content=f"充入 {chazuo_info - db_chazuo_info:.2f} 度。")
+        notify_all(
+            title="插座",
+            content=f"充入 {chazuo_info - db_chazuo_info:.2f} 度。",
+        )
+    # 空调充值通知
     if kongtiao_info - db_kongtiao_info > 0:
-        bark.send(
+        notify_all(
             title="空调",
             content=f"充入 {kongtiao_info - db_kongtiao_info:.2f} 度。",
         )
-    if yue_info - db_yue_info > 0:
-        bark.send(title="校园卡", content=f"充入 {yue_info - db_yue_info:.2f} 元。")
-
+    # 校园卡充值通知
+    if float(yue_info) - db_yue_info > 0:
+        notify_all(
+            title="校园卡",
+            content=f"充入 {yue_info - db_yue_info:.2f} 元。",
+        )
 
 if __name__ == "__main__":
 
@@ -197,7 +243,7 @@ if __name__ == "__main__":
     yue_info = data["yue"]
 
     try:
-        if config["notify"]["bark"]["enabled"]:
+        if config["notify"].get("bark", {}).get("enabled", False) or config["notify"].get("email", {}):
             notify(
                 chazuo_info,
                 kongtiao_info,
